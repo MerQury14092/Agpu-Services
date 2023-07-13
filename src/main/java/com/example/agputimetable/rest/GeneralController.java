@@ -1,6 +1,7 @@
 package com.example.agputimetable.rest;
 
 import com.example.agputimetable.model.Discipline;
+import com.example.agputimetable.service.GetGroupIdService;
 import com.example.agputimetable.service.GetTimetableService;
 import jakarta.websocket.server.PathParam;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class GeneralController {
     private final GetTimetableService service;
+    private final GetGroupIdService groupIdService;
 
     @GetMapping("/api/timetableOfDay")
     public List<Discipline> getTimetable(@PathParam("") String groupId,
@@ -32,6 +34,11 @@ public class GeneralController {
         if(startDate != null && endDate != null)
             return service.getDisciplines(groupId, startDate, endDate);
         return null;
+    }
+
+    @GetMapping("/api/allGroups")
+    public List<String> groups(){
+        return groupIdService.getAllGroups();
     }
 
 
