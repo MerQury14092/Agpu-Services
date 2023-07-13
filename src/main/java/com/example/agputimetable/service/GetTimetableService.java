@@ -1,5 +1,6 @@
 package com.example.agputimetable.service;
 
+import com.example.agputimetable.memory.TimetableMemory;
 import com.example.agputimetable.model.Discipline;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
@@ -20,9 +21,11 @@ import java.util.*;
 @Log4j2
 public class GetTimetableService {
     private final GetGroupIdService getGroupIdService;
+    private final TimetableMemory memory;
 
-    public GetTimetableService(GetGroupIdService getGroupIdService) {
+    public GetTimetableService(GetGroupIdService getGroupIdService, TimetableMemory memory) {
         this.getGroupIdService = getGroupIdService;
+        this.memory = memory;
     }
 
     private static final int ownerId = 118;
@@ -124,6 +127,12 @@ public class GetTimetableService {
 
 
     private List<Discipline> parseHtml(String url, String date) throws IOException {
+        List<Discipline> result = memory.getDisciplineByDate(date);
+        if(!result.isEmpty()) {
+            return result;
+        }
+        result = new ArrayList<>();
+
         URL url1 = new URL(url);
 
         HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
@@ -172,8 +181,6 @@ public class GetTimetableService {
             parseDay(elements.get(i), allDisciplines);
         }
 
-        List<Discipline> result = new ArrayList<>();
-
         dataFilter(result, allDisciplines, date);
 
         Integer[] pairs = new Integer[result.size()];
@@ -199,6 +206,7 @@ public class GetTimetableService {
 
         result.removeIf(Objects::isNull);
 
+        result.forEach(memory::addDiscipline);
         return result;
     }
 
