@@ -53,7 +53,8 @@ public class GetTimetableService {
                         ownerId,
                         getGroupIdService.getId(groupName),
                         weekId),
-                date
+                date,
+                groupName
         );
     }
 
@@ -126,8 +127,8 @@ public class GetTimetableService {
     }
 
 
-    private List<Discipline> parseHtml(String url, String date) throws IOException {
-        List<Discipline> result = memory.getDisciplineByDate(date);
+    private List<Discipline> parseHtml(String url, String date, String groupName) throws IOException {
+        List<Discipline> result = memory.getDisciplineByDate(groupName, date);
         if(!result.isEmpty()) {
             return result;
         }
@@ -186,7 +187,7 @@ public class GetTimetableService {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {
-                pairs[i] = 1;
+                pairs[i] = col[i];
                 continue;
             }
             pairs[i] = result.get(i).getColspan();
@@ -205,6 +206,8 @@ public class GetTimetableService {
         }
 
         result.removeIf(Objects::isNull);
+
+        result.forEach(el -> el.setGroupName(groupName));
 
         result.forEach(memory::addDiscipline);
         return result;

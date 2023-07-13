@@ -36,10 +36,13 @@ public class TimetableMemory {
         cleaner.start();
     }
 
-    public List<Discipline> getDisciplineByDate(String date){
-        log.info("trying get discipline by date {}\nDisciplines in memory:", date);
+    public List<Discipline> getDisciplineByDate(String groupName, String date){
+        log.info("trying get discipline by date {} and by name {}\nDisciplines in memory:", date, groupName);
         memory.forEach(log::info);
 
-        return memory.stream().filter(discipline -> discipline.getDate().equals(date)).collect(Collectors.toList());
+        return memory.stream()
+                .filter(discipline -> discipline.getDate().equals(date))
+                .filter(discipline -> discipline.getGroupName().equals(groupName))
+                .collect(Collectors.toList());
     }
 }

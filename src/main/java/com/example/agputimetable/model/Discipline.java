@@ -12,6 +12,7 @@ public class Discipline {
     private String teacherName;
     private String audienceId;
     private int subgroup;
+    private String groupName;
     @JsonIgnore
     private int colspan;
 
