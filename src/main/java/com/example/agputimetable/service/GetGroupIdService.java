@@ -1,0 +1,39 @@
+package com.example.agputimetable.service;
+
+import lombok.extern.log4j.Log4j2;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.Scanner;
+
+@Service
+@Log4j2
+public class GetGroupIdService {
+    public int getId(String groupName) throws IOException {
+
+        Scanner sc = new Scanner(this.getClass().getResourceAsStream("/static/groupids"));
+
+        StringBuilder builder = new StringBuilder();
+
+        while (sc.hasNextLine()){
+            builder.append(sc.nextLine()).append("\n");
+        }
+
+        String line = searchLineWith(builder.toString(), groupName);
+
+        if(line.equals("N"))
+            return 0;
+
+        return Integer.parseInt(line.split("&")[1].split("=")[1]);
+    }
+
+    private String searchLineWith(String text, String substring){
+        String[] arr = text.split("\n");
+        for(String cur : arr) {
+            if (cur.contains(substring)) {
+                return cur;
+            }
+        }
+        return "N";
+    }
+}
