@@ -122,10 +122,12 @@ public class GetTimetableService {
     private List<Discipline> parseHtml(String url, String date, String groupName) throws IOException {
         List<Discipline> result = memory.getDisciplineByDate(groupName, date);
         if(!result.isEmpty()) {
+            log.info("info: memory call");
             return result;
         }
         result = new ArrayList<>();
 
+        log.info("info: it-institut call");
         URL url1 = new URL(url);
 
         HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
@@ -145,11 +147,7 @@ public class GetTimetableService {
             html.append(cur);
         }
 
-        //log.info("source: {}", html);
-
         Document doc = Jsoup.parse(html.toString());
-
-        //log.info("doc is : {}", doc.html());
 
         Elements elements = doc
                 .getElementsByClass("table")
@@ -170,7 +168,6 @@ public class GetTimetableService {
         List<Discipline> allDisciplines = new ArrayList<>();
 
         for (int i = 0; i < 7; i++) {
-            //log.info("Парсится день: {}", elements.get(i).html());
             parseDay(elements.get(i), allDisciplines);
         }
 
@@ -179,16 +176,16 @@ public class GetTimetableService {
             if(tmpDate.equals(date))
                 continue;
             dataFilter(tmpArray, allDisciplines, tmpDate);
-            assignTimes(groupName, tmpArray, col);
+            assignMissingDataAndCaching(groupName, tmpArray, col);
         }
 
         dataFilter(result, allDisciplines, date);
 
-        assignTimes(groupName, result, col);
+        assignMissingDataAndCaching(groupName, result, col);
         return result;
     }
 
-    private void assignTimes(String groupName, List<Discipline> result, Integer[] col) {
+    private void assignMissingDataAndCaching(String groupName, List<Discipline> result, Integer[] col) {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {
@@ -229,8 +226,6 @@ public class GetTimetableService {
                 el.setType(DisciplineType.none);
         });
 
-        log.info("result for adding memory: {}", result);
-
         result.forEach(memory::addDiscipline);
     }
 
@@ -246,7 +241,6 @@ public class GetTimetableService {
         Element nameOfClass = el.getElementsByTag("th").first();
         Elements disciplines = el.getElementsByTag("td");
         for (int i = 0; i < 8; i++) {
-            //log.info("Парсится дисциплина: {}", disciplines.get(i).html());
             parseDiscipline(disciplines.get(i), disc, nameOfClass.html().split("\n")[1]);
         }
     }
@@ -273,7 +267,6 @@ public class GetTimetableService {
         result.setDate(date);
         result.setColspan(Integer.parseInt(el.attr("colspan")));
         disc.add(result);
-        //log.info("discipline add to list:\n{}", result);
     }
 
     private String timeByIndex(int index){
