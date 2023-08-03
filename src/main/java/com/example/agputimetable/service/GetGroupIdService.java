@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Scanner;
 
 @Service
-@Log4j2
 public class GetGroupIdService {
     public int getId(String groupName){
 

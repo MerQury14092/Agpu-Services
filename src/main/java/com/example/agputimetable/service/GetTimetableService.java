@@ -105,9 +105,6 @@ public class GetTimetableService {
         long currentTime = dt.getTime();
         long mappingWeek = currentTime / 1000 / 60 / 60 / 24;
 
-        log.info("m w: {}", mappingWeek);
-        log.info("m w ms: {}", dt.getTime());
-
 
         part = endDate.split("\\.");
         dt = new Date(
@@ -117,12 +114,6 @@ public class GetTimetableService {
         );
         currentTime = dt.getTime();
         long currentWeek = (long) (currentTime / 1000d / 60 / 60 / 24);
-
-
-        log.info("c w: {}", currentWeek);
-        log.info("c w ms: {}", dt.getTime());
-
-        log.info("difference: {}", (currentWeek - mappingWeek));
 
         return (currentWeek - mappingWeek);
     }
@@ -183,8 +174,21 @@ public class GetTimetableService {
             parseDay(elements.get(i), allDisciplines);
         }
 
+        for(String tmpDate: getDatesBetween(allDisciplines.get(0).getDate(), allDisciplines.get(allDisciplines.size()-1).getDate())){
+            List<Discipline> tmpArray = new ArrayList<>();
+            if(tmpDate.equals(date))
+                continue;
+            dataFilter(tmpArray, allDisciplines, tmpDate);
+            assignTimes(groupName, tmpArray, col);
+        }
+
         dataFilter(result, allDisciplines, date);
 
+        assignTimes(groupName, result, col);
+        return result;
+    }
+
+    private void assignTimes(String groupName, List<Discipline> result, Integer[] col) {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {
@@ -195,10 +199,6 @@ public class GetTimetableService {
         }
 
         Integer[] res = res(col, pairs);
-
-        log.info("col = {}", Arrays.toString(col));
-        log.info("pairs = {}", Arrays.toString(pairs));
-        log.info("res = {}", Arrays.toString(res));
 
         for (int i = 0; i < result.size(); i++) {
             if(result.get(i) == null)
@@ -229,8 +229,9 @@ public class GetTimetableService {
                 el.setType(DisciplineType.none);
         });
 
+        log.info("result for adding memory: {}", result);
+
         result.forEach(memory::addDiscipline);
-        return result;
     }
 
     private Integer[] parseCol(Elements elements){
