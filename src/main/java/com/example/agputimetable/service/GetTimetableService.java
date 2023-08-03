@@ -1,5 +1,6 @@
 package com.example.agputimetable.service;
 
+import com.example.agputimetable.enums.DisciplineType;
 import com.example.agputimetable.memory.TimetableMemory;
 import com.example.agputimetable.model.Discipline;
 import lombok.extern.log4j.Log4j2;
@@ -208,6 +209,25 @@ public class GetTimetableService {
         result.removeIf(Objects::isNull);
 
         result.forEach(el -> el.setGroupName(groupName));
+        result.forEach(el -> {
+            String d_name = el.getName();
+            if(d_name.toLowerCase().contains("лек"))
+                el.setType(DisciplineType.lec);
+            else if(d_name.toLowerCase().contains("прак"))
+                el.setType(DisciplineType.prac);
+            else if(d_name.toLowerCase().contains("экз"))
+                el.setType(DisciplineType.exam);
+            else if(d_name.toLowerCase().contains("лаб"))
+                el.setType(DisciplineType.lab);
+            else if(d_name.toLowerCase().contains("каникулы"))
+                el.setType(DisciplineType.hol);
+            else if(d_name.toLowerCase().contains("выходной"))
+                el.setType(DisciplineType.hol);
+            else if(d_name.toLowerCase().contains("зач"))
+                el.setType(DisciplineType.cred);
+            else
+                el.setType(DisciplineType.none);
+        });
 
         result.forEach(memory::addDiscipline);
         return result;

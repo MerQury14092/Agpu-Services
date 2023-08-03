@@ -1,6 +1,7 @@
 package com.example.agputimetable.model;
 
 
+import com.example.agputimetable.enums.DisciplineType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
@@ -12,6 +13,7 @@ public class Discipline {
     private String teacherName;
     private String audienceId;
     private int subgroup;
+    private DisciplineType type;
     private String groupName;
     @JsonIgnore
     private int colspan;
