@@ -208,23 +208,35 @@ public class GetTimetableService {
         result.forEach(el -> el.setGroupName(groupName));
         result.forEach(el -> {
             String d_name = el.getName();
-            if(d_name.toLowerCase().contains("лек"))
+            if(d_name.toLowerCase().contains("лек."))
                 el.setType(DisciplineType.lec);
-            else if(d_name.toLowerCase().contains("прак"))
+            else if(d_name.toLowerCase().contains("прак."))
                 el.setType(DisciplineType.prac);
-            else if(d_name.toLowerCase().contains("экз"))
+            else if(d_name.toLowerCase().contains("экз."))
                 el.setType(DisciplineType.exam);
-            else if(d_name.toLowerCase().contains("лаб"))
+            else if(d_name.toLowerCase().contains("лаб."))
                 el.setType(DisciplineType.lab);
             else if(d_name.toLowerCase().contains("каникулы"))
                 el.setType(DisciplineType.hol);
             else if(d_name.toLowerCase().contains("выходной"))
                 el.setType(DisciplineType.hol);
-            else if(d_name.toLowerCase().contains("зач"))
+            else if(d_name.toLowerCase().contains("зач."))
                 el.setType(DisciplineType.cred);
+            else if(d_name.toLowerCase().contains("конс."))
+                el.setType(DisciplineType.cons);
+            else if(d_name.toLowerCase().contains("фэпо"))
+                el.setType(DisciplineType.fepo);
             else
                 el.setType(DisciplineType.none);
         });
+
+
+        if(!result.isEmpty()){
+            List<Discipline> check = memory.getDisciplineByDate(groupName, result.get(0).getDate());
+            if(!check.isEmpty()) {
+                return;
+            }
+        }
 
         result.forEach(memory::addDiscipline);
     }
@@ -259,6 +271,9 @@ public class GetTimetableService {
         if (prepodAndAudience.length >= 3) {
             result.setTeacherName(prepodAndAudience[0].trim());
             result.setAudienceId(prepodAndAudience[2].trim());
+        } else if (prepodAndAudience.length == 2) {
+            result.setTeacherName(prepodAndAudience[0].trim());
+            result.setAudienceId(prepodAndAudience[1].trim());
         }
         if (spans.size() < 4)
             result.setSubgroup(0);

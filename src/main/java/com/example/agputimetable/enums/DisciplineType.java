@@ -7,5 +7,7 @@ public enum DisciplineType {
     lab,
     hol,
     cred,
+    fepo,
+    cons,
     none
 }
