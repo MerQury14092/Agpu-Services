@@ -1,5 +1,6 @@
 package com.example.agputimetable.rest;
 
+import com.example.agputimetable.model.Day;
 import com.example.agputimetable.model.Discipline;
 import com.example.agputimetable.service.GetGroupIdService;
 import com.example.agputimetable.service.GetTimetableService;
@@ -18,21 +19,24 @@ public class GeneralController {
     private final GetGroupIdService groupIdService;
 
     @GetMapping("/api/timetableOfDay")
-    public List<Discipline> getTimetable(@PathParam("") String groupId,
-                                         @PathParam("") String date
+    public Day getTimetable(@PathParam("") String groupId,
+                            @PathParam("") String date
     ) throws IOException {
         if(date != null)
-            return service.getDisciplines(groupId, date);
+            return service.getDisciplines(groupId, date).deleteHolidays();
         return null;
     }
 
     @GetMapping("/api/timetableOfDays")
-    public List<List<Discipline>> getTimetable(@PathParam("") String groupId,
-                                               @PathParam("") String startDate,
-                                               @PathParam("") String endDate
+    public List<Day> getTimetable(@PathParam("") String groupId,
+                                  @PathParam("") String startDate,
+                                  @PathParam("") String endDate
     ) throws IOException {
-        if(startDate != null && endDate != null)
-            return service.getDisciplines(groupId, startDate, endDate);
+        if(startDate != null && endDate != null) {
+            List<Day> result = service.getDisciplines(groupId, startDate, endDate);
+            result.forEach(Day::deleteHolidays);
+            return result;
+        }
         return null;
     }
 

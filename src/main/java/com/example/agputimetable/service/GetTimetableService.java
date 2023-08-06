@@ -2,6 +2,7 @@ package com.example.agputimetable.service;
 
 import com.example.agputimetable.enums.DisciplineType;
 import com.example.agputimetable.memory.TimetableMemory;
+import com.example.agputimetable.model.Day;
 import com.example.agputimetable.model.Discipline;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
@@ -32,15 +33,15 @@ public class GetTimetableService {
     private static final int ownerId = 118;
     private static final String url = "http://www.it-institut.ru/Raspisanie/SearchedRaspisanie?OwnerId=%d&SearchId=%d&SearchString=None&Type=Group&WeekId=%d";
 
-    public List<List<Discipline>> getDisciplines(String groupName, String startDate, String endDate) throws IOException {
-        List<List<Discipline>> result = new ArrayList<>();
+    public List<Day> getDisciplines(String groupName, String startDate, String endDate) throws IOException {
+        List<Day> result = new ArrayList<>();
         for(String date: getDatesBetween(startDate, endDate)) {
             result.add(getDisciplines(groupName, date));
         }
-        return result;
+        return proxyList(result);
     }
 
-    public List<Discipline> getDisciplines(String groupName, String date) throws IOException {
+    public Day getDisciplines(String groupName, String date) throws IOException {
 
 
         int mappingWeekId = 3100;
@@ -56,7 +57,7 @@ public class GetTimetableService {
                         weekId),
                 date,
                 groupName
-        );
+        ).proxy();
     }
 
     private void dataFilter(List<Discipline> result, List<Discipline> allDisciplines, String cur) {
@@ -119,11 +120,12 @@ public class GetTimetableService {
     }
 
 
-    private List<Discipline> parseHtml(String url, String date, String groupName) throws IOException {
-        List<Discipline> result = memory.getDisciplineByDate(groupName, date);
+    private Day parseHtml(String url, String date, String groupName) throws IOException {
+        Day day = memory.getDisciplineByDate(groupName, date);
+        List<Discipline> result = day.getDisciplines();
         if(!result.isEmpty()) {
             log.info("info: memory call");
-            return result;
+            return day;
         }
         result = new ArrayList<>();
 
@@ -176,16 +178,20 @@ public class GetTimetableService {
             if(tmpDate.equals(date))
                 continue;
             dataFilter(tmpArray, allDisciplines, tmpDate);
-            assignMissingDataAndCaching(groupName, tmpArray, col);
+            assignMissingDataAndCaching(groupName, tmpArray, col, tmpDate);
         }
 
         dataFilter(result, allDisciplines, date);
 
-        assignMissingDataAndCaching(groupName, result, col);
-        return result;
+        assignMissingDataAndCaching(groupName, result, col, date);
+        return Day.builder()
+                .date(date)
+                .groupName(groupName)
+                .disciplines(result)
+                .build();
     }
 
-    private void assignMissingDataAndCaching(String groupName, List<Discipline> result, Integer[] col) {
+    private void assignMissingDataAndCaching(String groupName, List<Discipline> result, Integer[] col, String date) {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {
@@ -232,13 +238,27 @@ public class GetTimetableService {
 
 
         if(!result.isEmpty()){
-            List<Discipline> check = memory.getDisciplineByDate(groupName, result.get(0).getDate());
+            Day check = memory.getDisciplineByDate(groupName, result.get(0).getDate());
             if(!check.isEmpty()) {
                 return;
             }
         }
 
-        result.forEach(memory::addDiscipline);
+        if(result.isEmpty())
+            result.add(Discipline.holiday(date, groupName));
+        memory.addDiscipline(Day.builder()
+                .groupName(groupName)
+                .date(date)
+                .disciplines(result)
+                .build()
+        );
+    }
+
+    private List<Day> proxyList(List<Day> source){
+        List<Day> res = new ArrayList<>();
+        for(Day day: source)
+            res.add(day.proxy());
+        return res;
     }
 
     private Integer[] parseCol(Elements elements){
