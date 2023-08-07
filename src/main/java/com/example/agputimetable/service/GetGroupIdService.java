@@ -1,17 +1,17 @@
 package com.example.agputimetable.service;
 
-import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 @Service
 public class GetGroupIdService {
     public int getId(String groupName){
 
-        Scanner sc = new Scanner(this.getClass().getResourceAsStream("/static/groupids"));
+        Scanner sc = new Scanner(Objects.requireNonNull(this.getClass().getResourceAsStream("/static/groupids")));
 
         StringBuilder builder = new StringBuilder();
 
@@ -28,7 +28,7 @@ public class GetGroupIdService {
     }
 
     public List<String> getAllGroups(){
-        Scanner sc = new Scanner(this.getClass().getResourceAsStream("/static/groupids"));
+        Scanner sc = new Scanner(Objects.requireNonNull(this.getClass().getResourceAsStream("/static/groupids")));
 
         StringBuilder builder = new StringBuilder();
 

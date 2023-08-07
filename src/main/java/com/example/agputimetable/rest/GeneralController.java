@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.websocket.server.PathParam;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -16,12 +17,13 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("/api")
 public class GeneralController {
     private final GetTimetableService service;
     private final GetGroupIdService groupIdService;
     private final GetWeeksService weeksService;
 
-    @GetMapping("/api/timetableOfDay")
+    @GetMapping("/timetableOfDay")
     public Day getTimetable(@PathParam("") String groupId,
                             @PathParam("") String date
     ) throws IOException {
@@ -30,7 +32,7 @@ public class GeneralController {
         return null;
     }
 
-    @GetMapping("/api/timetableOfDays")
+    @GetMapping("/timetableOfDays")
     public List<Day> getTimetable(@PathParam("") String groupId,
                                   @PathParam("") String startDate,
                                   @PathParam("") String endDate,
@@ -47,12 +49,12 @@ public class GeneralController {
         return null;
     }
 
-    @GetMapping("/api/getWeeks")
+    @GetMapping("/getWeeks")
     public List<Week> getWeeks(){
         return weeksService.getEverything();
     }
 
-    @GetMapping("/api/allGroups")
+    @GetMapping("/allGroups")
     public List<String> groups(){
         return groupIdService.getAllGroups();
     }

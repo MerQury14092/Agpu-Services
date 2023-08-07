@@ -8,7 +8,7 @@ import java.util.List;
 
 @Component
 public class WeekMemory {
-    private List<Week> memory;
+    private final List<Week> memory;
 
     public WeekMemory(){
         memory = new ArrayList<>();

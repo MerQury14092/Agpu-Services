@@ -46,7 +46,7 @@ public class GetTimetableService {
 
         int mappingWeekId = 3100;
 
-        long weekId = mappingWeekId + countDays("29.08.2022", date) / 7;
+        long weekId = mappingWeekId + countDays(date) / 7;
 
         log.info("log weekID: {}", weekId);
 
@@ -70,7 +70,7 @@ public class GetTimetableService {
             }
         }
         for (; ; ) {
-            if (result.size() == 0)
+            if (result.isEmpty())
                 break;
             if (result.get(result.size() - 1) == null)
                 result.remove(result.size() - 1);
@@ -96,8 +96,8 @@ public class GetTimetableService {
         return dates;
     }
 
-    private long countDays(String startDate, String endDate) {
-        String[] part = startDate.split("\\.");
+    private long countDays(String endDate) {
+        String[] part = "29.08.2022".split("\\.");
         Date dt = new Date(
                 Integer.parseInt(part[2]),
                 Integer.parseInt(part[1]) - 1,
@@ -151,18 +151,18 @@ public class GetTimetableService {
 
         Document doc = Jsoup.parse(html.toString());
 
-        Elements elements = doc
-                .getElementsByClass("table")
-                .first()
-                .getElementsByTag("tbody")
-                .first()
+        Elements elements = Objects.requireNonNull(Objects.requireNonNull(doc
+                                .getElementsByClass("table")
+                                .first())
+                        .getElementsByTag("tbody")
+                        .first())
                 .getElementsByTag("tr");
 
-        Elements times = doc
-                .getElementsByClass("thead-light")
-                .first()
-                .getElementsByTag("tr")
-                .first()
+        Elements times = Objects.requireNonNull(Objects.requireNonNull(doc
+                                .getElementsByClass("thead-light")
+                                .first())
+                        .getElementsByTag("tr")
+                        .first())
                 .getElementsByTag("th");
 
         Integer[] col = parseCol(times);
@@ -245,7 +245,7 @@ public class GetTimetableService {
         }
 
         if(result.isEmpty())
-            result.add(Discipline.holiday(date, groupName));
+            result.add(Discipline.holiday());
         memory.addDiscipline(Day.builder()
                 .groupName(groupName)
                 .date(date)
@@ -273,6 +273,7 @@ public class GetTimetableService {
         Element nameOfClass = el.getElementsByTag("th").first();
         Elements disciplines = el.getElementsByTag("td");
         for (int i = 0; i < 8; i++) {
+            assert nameOfClass != null;
             parseDiscipline(disciplines.get(i), disc, nameOfClass.html().split("\n")[1]);
         }
     }
@@ -280,7 +281,7 @@ public class GetTimetableService {
     private void parseDiscipline(Element el, List<Discipline> disc, String date) { // сюда приходит тег td
         Discipline result = new Discipline();
         Elements spans = el.getElementsByTag("span");
-        if(spans.size() == 0) {
+        if(spans.isEmpty()) {
             result.setDate(date);
             result.setColspan(1);
             disc.add(result);
