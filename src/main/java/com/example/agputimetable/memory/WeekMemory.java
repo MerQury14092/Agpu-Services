@@ -21,4 +21,8 @@ public class WeekMemory {
     public void addAll(List<Week> list){
         memory.addAll(list);
     }
+
+    public void initWeeks(){
+        memory.forEach(Week::initArray);
+    }
 }

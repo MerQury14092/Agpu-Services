@@ -24,6 +24,7 @@ public class GetWeeksService {
     public GetWeeksService(WeekMemory memory) {
         this.memory = memory;
         memory.addAll(parseHtml());
+        memory.initWeeks();
     }
 
     public List<Week> getEverything(){
