@@ -1,7 +1,7 @@
-package com.example.agputimetable.service;
+package com.merqury.agpu.timetable.service;
 
-import com.example.agputimetable.memory.WeekMemory;
-import com.example.agputimetable.model.Week;
+import com.merqury.agpu.timetable.DTO.Week;
+import com.merqury.agpu.timetable.memory.WeekMemory;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

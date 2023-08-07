@@ -1,4 +1,4 @@
-package com.example.agputimetable.model;
+package com.merqury.agpu.timetable.DTO;
 
 import static java.lang.Integer.parseInt;
 public class DateString implements Comparable<DateString>{

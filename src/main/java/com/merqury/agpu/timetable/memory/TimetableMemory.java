@@ -1,6 +1,6 @@
-package com.example.agputimetable.memory;
+package com.merqury.agpu.timetable.memory;
 
-import com.example.agputimetable.model.Day;
+import com.merqury.agpu.timetable.DTO.Day;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 

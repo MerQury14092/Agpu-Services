@@ -1,6 +1,6 @@
-package com.example.agputimetable.memory;
+package com.merqury.agpu.timetable.memory;
 
-import com.example.agputimetable.model.Week;
+import com.merqury.agpu.timetable.DTO.Week;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

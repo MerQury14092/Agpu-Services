@@ -1,4 +1,4 @@
-package com.example.agputimetable.model;
+package com.merqury.agpu.timetable.DTO;
 
 import lombok.Data;
 

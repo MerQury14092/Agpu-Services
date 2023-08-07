@@ -1,4 +1,4 @@
-package com.example.agputimetable.service;
+package com.merqury.agpu.timetable.service;
 
 import org.springframework.stereotype.Service;
 

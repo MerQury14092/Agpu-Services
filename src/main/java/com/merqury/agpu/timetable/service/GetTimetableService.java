@@ -1,9 +1,9 @@
-package com.example.agputimetable.service;
+package com.merqury.agpu.timetable.service;
 
-import com.example.agputimetable.enums.DisciplineType;
-import com.example.agputimetable.memory.TimetableMemory;
-import com.example.agputimetable.model.Day;
-import com.example.agputimetable.model.Discipline;
+import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.Discipline;
+import com.merqury.agpu.timetable.enums.DisciplineType;
+import com.merqury.agpu.timetable.memory.TimetableMemory;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

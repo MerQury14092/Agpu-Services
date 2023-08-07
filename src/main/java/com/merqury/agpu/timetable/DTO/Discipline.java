@@ -1,8 +1,8 @@
-package com.example.agputimetable.model;
+package com.merqury.agpu.timetable.DTO;
 
 
-import com.example.agputimetable.enums.DisciplineType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.merqury.agpu.timetable.enums.DisciplineType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

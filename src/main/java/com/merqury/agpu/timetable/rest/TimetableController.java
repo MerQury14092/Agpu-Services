@@ -1,10 +1,10 @@
-package com.example.agputimetable.rest;
+package com.merqury.agpu.timetable.rest;
 
-import com.example.agputimetable.model.Day;
-import com.example.agputimetable.model.Week;
-import com.example.agputimetable.service.GetGroupIdService;
-import com.example.agputimetable.service.GetTimetableService;
-import com.example.agputimetable.service.GetWeeksService;
+import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.Week;
+import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetTimetableService;
+import com.merqury.agpu.timetable.service.GetWeeksService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.websocket.server.PathParam;
 import lombok.AllArgsConstructor;
@@ -17,13 +17,13 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api")
-public class GeneralController {
+@RequestMapping("/api/timetable")
+public class TimetableController {
     private final GetTimetableService service;
     private final GetGroupIdService groupIdService;
     private final GetWeeksService weeksService;
 
-    @GetMapping("/timetableOfDay")
+    @GetMapping("/day")
     public Day getTimetable(@PathParam("") String groupId,
                             @PathParam("") String date
     ) throws IOException {
@@ -32,7 +32,7 @@ public class GeneralController {
         return null;
     }
 
-    @GetMapping("/timetableOfDays")
+    @GetMapping("/days")
     public List<Day> getTimetable(@PathParam("") String groupId,
                                   @PathParam("") String startDate,
                                   @PathParam("") String endDate,
@@ -49,12 +49,12 @@ public class GeneralController {
         return null;
     }
 
-    @GetMapping("/getWeeks")
+    @GetMapping("/weeks")
     public List<Week> getWeeks(){
         return weeksService.getEverything();
     }
 
-    @GetMapping("/allGroups")
+    @GetMapping("/groups")
     public List<String> groups(){
         return groupIdService.getAllGroups();
     }
