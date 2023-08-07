@@ -3,13 +3,13 @@ package com.example.agputimetable.service;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 @Service
-@Log4j2
 public class GetGroupIdService {
-    public int getId(String groupName) throws IOException {
+    public int getId(String groupName){
 
         Scanner sc = new Scanner(this.getClass().getResourceAsStream("/static/groupids"));
 
@@ -25,6 +25,26 @@ public class GetGroupIdService {
             return 0;
 
         return Integer.parseInt(line.split("&")[1].split("=")[1]);
+    }
+
+    public List<String> getAllGroups(){
+        Scanner sc = new Scanner(this.getClass().getResourceAsStream("/static/groupids"));
+
+        StringBuilder builder = new StringBuilder();
+
+        while (sc.hasNextLine()){
+            builder.append(sc.nextLine()).append("\n");
+        }
+
+        List<String> res = new ArrayList<>();
+
+        String[] arr = builder.toString().split("\n");
+        for(String cur : arr) {
+            if (cur.contains("<a class=\"btn btn-outline-primary\" href=\"/Raspisanie/SearchedRaspisanie")) {
+                res.add(cur.replace("<", ">").split(">")[2]);
+            }
+        }
+        return res;
     }
 
     private String searchLineWith(String text, String substring){
