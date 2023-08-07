@@ -1,9 +1,10 @@
 package com.example.agputimetable.rest;
 
 import com.example.agputimetable.model.Day;
-import com.example.agputimetable.model.Discipline;
+import com.example.agputimetable.model.Week;
 import com.example.agputimetable.service.GetGroupIdService;
 import com.example.agputimetable.service.GetTimetableService;
+import com.example.agputimetable.service.GetWeeksService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.websocket.server.PathParam;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.List;
 public class GeneralController {
     private final GetTimetableService service;
     private final GetGroupIdService groupIdService;
+    private final GetWeeksService weeksService;
 
     @GetMapping("/api/timetableOfDay")
     public Day getTimetable(@PathParam("") String groupId,
@@ -43,6 +45,11 @@ public class GeneralController {
             return result;
         }
         return null;
+    }
+
+    @GetMapping("/api/getWeeks")
+    public List<Week> getWeeks(){
+        return weeksService.getEverything();
     }
 
     @GetMapping("/api/allGroups")

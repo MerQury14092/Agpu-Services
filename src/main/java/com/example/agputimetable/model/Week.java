@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.HashMap;
 
 @Data
-public class Weekend {
+public class Week {
     private int id;
     private String from;
     private String to;

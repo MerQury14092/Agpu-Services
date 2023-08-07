@@ -1,7 +1,7 @@
 package com.example.agputimetable.service;
 
-import com.example.agputimetable.memory.WeekendsMemory;
-import com.example.agputimetable.model.Weekend;
+import com.example.agputimetable.memory.WeekMemory;
+import com.example.agputimetable.model.Week;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,18 +16,22 @@ import java.util.Scanner;
 
 @Component
 @Log4j2
-public class GetWeekendsService {
+public class GetWeeksService {
 
-    private final WeekendsMemory memory;
+    private final WeekMemory memory;
 
     @Autowired
-    public GetWeekendsService(WeekendsMemory memory) {
+    public GetWeeksService(WeekMemory memory) {
         this.memory = memory;
         memory.addAll(parseHtml());
     }
 
-    private List<Weekend> parseHtml(){
-        Scanner sc = new Scanner(GetWeekendsService.class.getResourceAsStream("/static/weekends"));
+    public List<Week> getEverything(){
+        return memory.getEverything();
+    }
+
+    private List<Week> parseHtml(){
+        Scanner sc = new Scanner(GetWeeksService.class.getResourceAsStream("/static/weeks"));
 
         StringBuilder builder = new StringBuilder();
 
@@ -37,20 +41,18 @@ public class GetWeekendsService {
 
         Document document = Jsoup.parse(builder.toString());
 
-        List<Weekend> weekends = new ArrayList<>();
+        List<Week> weeks = new ArrayList<>();
 
         for(Element el: document.
                 getElementsByClass("col-4 mb-3")
-                //.first()
-                //.getElementsByClass("modal fade show")
         )
-            weekends.add(parseWeekend(el));
+            weeks.add(parseWeekend(el));
 
-        return weekends;
+        return weeks;
     }
 
-    private Weekend parseWeekend(Element el){ // сюда приходит col-4 mb-3
-        Weekend res = new Weekend();
+    private Week parseWeekend(Element el){ // сюда приходит col-4 mb-3
+        Week res = new Week();
         Elements properties = el.getElementsByTag("span");
         res.setId(Integer.parseInt(properties.get(0).text()));
         res.setFrom(properties.get(1).text().replace("с ",""));
