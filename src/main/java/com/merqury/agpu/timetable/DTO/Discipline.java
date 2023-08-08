@@ -1,12 +1,10 @@
-package com.example.agputimetable.model;
+package com.merqury.agpu.timetable.DTO;
 
 
-import com.example.agputimetable.enums.DisciplineType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.merqury.agpu.timetable.enums.DisciplineType;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
@@ -27,7 +25,7 @@ public class Discipline {
     public Discipline() {
     }
 
-    public static Discipline holiday(String date, String groupName){
+    public static Discipline holiday(){
         Discipline res = new Discipline();
         res.setName("HOLIDAY");
         return res;

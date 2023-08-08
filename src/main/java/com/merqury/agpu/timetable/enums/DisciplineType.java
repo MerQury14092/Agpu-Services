@@ -1,4 +1,4 @@
-package com.example.agputimetable.enums;
+package com.merqury.agpu.timetable.enums;
 
 public enum DisciplineType {
     lec,

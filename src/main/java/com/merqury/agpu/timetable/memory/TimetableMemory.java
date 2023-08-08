@@ -1,16 +1,13 @@
-package com.example.agputimetable.memory;
+package com.merqury.agpu.timetable.memory;
 
-import com.example.agputimetable.model.Day;
-import com.example.agputimetable.model.Discipline;
+import com.merqury.agpu.timetable.DTO.Day;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Component
 @Log4j2

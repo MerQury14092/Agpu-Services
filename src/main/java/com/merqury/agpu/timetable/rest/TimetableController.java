@@ -1,13 +1,16 @@
-package com.example.agputimetable.rest;
+package com.merqury.agpu.timetable.rest;
 
-import com.example.agputimetable.model.Day;
-import com.example.agputimetable.model.Discipline;
-import com.example.agputimetable.service.GetGroupIdService;
-import com.example.agputimetable.service.GetTimetableService;
+import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.Groups;
+import com.merqury.agpu.timetable.DTO.Week;
+import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetTimetableService;
+import com.merqury.agpu.timetable.service.GetWeeksService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.websocket.server.PathParam;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -15,11 +18,13 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-public class GeneralController {
+@RequestMapping("/api/timetable")
+public class TimetableController {
     private final GetTimetableService service;
     private final GetGroupIdService groupIdService;
+    private final GetWeeksService weeksService;
 
-    @GetMapping("/api/timetableOfDay")
+    @GetMapping("/day")
     public Day getTimetable(@PathParam("") String groupId,
                             @PathParam("") String date
     ) throws IOException {
@@ -28,7 +33,7 @@ public class GeneralController {
         return null;
     }
 
-    @GetMapping("/api/timetableOfDays")
+    @GetMapping("/days")
     public List<Day> getTimetable(@PathParam("") String groupId,
                                   @PathParam("") String startDate,
                                   @PathParam("") String endDate,
@@ -45,8 +50,13 @@ public class GeneralController {
         return null;
     }
 
-    @GetMapping("/api/allGroups")
-    public List<String> groups(){
+    @GetMapping("/weeks")
+    public List<Week> getWeeks(){
+        return weeksService.getEverything();
+    }
+
+    @GetMapping("/groups")
+    public List<Groups> groups(){
         return groupIdService.getAllGroups();
     }
 }

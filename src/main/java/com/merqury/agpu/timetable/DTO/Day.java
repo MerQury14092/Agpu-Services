@@ -1,4 +1,4 @@
-package com.example.agputimetable.model;
+package com.merqury.agpu.timetable.DTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
