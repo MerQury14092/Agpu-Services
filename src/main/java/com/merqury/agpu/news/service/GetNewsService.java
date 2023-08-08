@@ -14,11 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.merqury.agpu.general.AgpuConstants.hostSite;
+
 @Service
 @Log4j2
 public class GetNewsService {
-    private static final String urlForEverything = "http://test.agpu.net/struktura-vuza/faculties-institutes/%s/news/news.php?PAGEN_1=%d";
-    private static final String urlForArticle = "http://test.agpu.net/struktura-vuza/faculties-institutes/%s/news/news.php?ELEMENT_ID=%d";
+    private static final String urlForEverything = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?PAGEN_1=%d";
+    private static final String urlForArticle = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?ELEMENT_ID=%d";
 
     public List<PreviewArticle> getArticlesByFaculty(String faculty) throws IOException {
         List<PreviewArticle> res = new ArrayList<>();
@@ -88,7 +90,7 @@ public class GetNewsService {
                             .text()
             );
         res.setPreviewImage(
-                "http://test.agpu.net"
+                hostSite
                         +
                         el.getElementsByTag("img")
                                 .first()
