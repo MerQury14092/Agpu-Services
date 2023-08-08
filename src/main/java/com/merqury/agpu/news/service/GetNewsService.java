@@ -1,11 +1,13 @@
 package com.merqury.agpu.news.service;
 
 import com.merqury.agpu.news.DTO.FullArticle;
+import com.merqury.agpu.news.DTO.NewsResponse;
 import com.merqury.agpu.news.DTO.PreviewArticle;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -23,32 +25,53 @@ public class GetNewsService {
     private static final String urlForArticle = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?ELEMENT_ID=%d";
     private final static String urlAgpuNews = "http://test.agpu.net/news.php";
 
-    public List<PreviewArticle> getArticlesByFaculty(String faculty) throws IOException {
+    public NewsResponse getArticlesByFaculty(String faculty, int page) throws IOException {
         List<PreviewArticle> res = new ArrayList<>();
-        Document doc = Jsoup.parse(new URL(String.format(urlForEverything, faculty, 1)), 5000);
-        for (Element el : doc.getElementsByTag("article"))
-            res.add(parsePreviewArticleElement(el));
-        return res;
+        Document doc = Jsoup.parse(new URL(String.format(urlForEverything, faculty, page)), 5000);
+        return getNewsResponse(page, doc, res);
     }
 
     public FullArticle getArticleById(String faculty, int id) throws IOException{
         Document doc;
         if(faculty.equals("agpu")) {
             doc = Jsoup.parse(new URL(urlAgpuNews + "?ELEMENT_ID=" + id), 5000);
-            return parseArticlePage(Objects.requireNonNull(doc.getElementsByClass(/*"col-md-9 md-padding main-content"*/"mb-3").first()), id);
         }
         else {
             doc = Jsoup.parse(new URL(String.format(urlForArticle, faculty, id)), 5000);
-            return parseArticlePage(Objects.requireNonNull(doc.getElementsByClass("mb-3").first()), id);
         }
+        return parseArticlePage(Objects.requireNonNull(doc.getElementsByClass(/*"col-md-9 md-padding main-content"*/"mb-3").first()), id);
     }
 
-    public List<PreviewArticle> getAgpuNews() throws IOException {
-        Document doc = Jsoup.parse(new URL(urlAgpuNews), 5000);
+    public NewsResponse getAgpuNews(int page) throws IOException {
+        Document doc = Jsoup.parse(new URL(urlAgpuNews+"?PAGEN_1="+page), 5000);
         List<PreviewArticle> res = new ArrayList<>();
+        return getNewsResponse(page, doc, res);
+    }
+
+    private NewsResponse getNewsResponse(int page, Document doc, List<PreviewArticle> res) {
         for (Element el : doc.getElementsByTag("article"))
             res.add(parsePreviewArticleElement(el));
-        return res;
+        NewsResponse result = new NewsResponse();
+        result.setCurrentPage(page);
+        result.setArticles(res);
+        Elements elsA = doc.getElementsByTag("a");
+        List<Element> els = new ArrayList<>();
+        for(Element el: elsA){
+            if(el.text().equals("Конец"))
+                els.add(el);
+        }
+        if(els.isEmpty())
+            result.setCountPages(1);
+        else {
+            result.setCountPages(
+                    Integer.parseInt(
+                            els.get(0)
+                                    .attr("href")
+                                    .split("PAGEN_1=")[1]
+                    )
+            );
+        }
+        return result;
     }
 
     private FullArticle parseArticlePage(Element element, int id){
