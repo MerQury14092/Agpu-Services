@@ -1,6 +1,7 @@
 package com.merqury.agpu.timetable.rest;
 
 import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.DTO.Week;
 import com.merqury.agpu.timetable.service.GetGroupIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
@@ -55,7 +56,7 @@ public class TimetableController {
     }
 
     @GetMapping("/groups")
-    public List<String> groups(){
+    public List<Groups> groups(){
         return groupIdService.getAllGroups();
     }
 }
