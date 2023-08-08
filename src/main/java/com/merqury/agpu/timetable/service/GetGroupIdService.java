@@ -1,5 +1,8 @@
 package com.merqury.agpu.timetable.service;
 
+import com.merqury.agpu.timetable.DTO.Groups;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,7 +30,7 @@ public class GetGroupIdService {
         return Integer.parseInt(line.split("&")[1].split("=")[1]);
     }
 
-    public List<String> getAllGroups(){
+    public List<Groups> getAllGroups(){
         Scanner sc = new Scanner(Objects.requireNonNull(this.getClass().getResourceAsStream("/static/groupids")));
 
         StringBuilder builder = new StringBuilder();
@@ -36,13 +39,23 @@ public class GetGroupIdService {
             builder.append(sc.nextLine()).append("\n");
         }
 
-        List<String> res = new ArrayList<>();
+        List<Groups> res = new ArrayList<>();
 
         String[] arr = builder.toString().split("\n");
-        for(String cur : arr) {
-            if (cur.contains("<a class=\"btn btn-outline-primary\" href=\"/Raspisanie/SearchedRaspisanie")) {
-                res.add(cur.replace("<", ">").split(">")[2]);
-            }
+        for(Element el : Jsoup.parse(builder.toString()).getElementsByClass("card")) {
+            res.add(parseCardElement(el));
+        }
+        return res;
+    }
+
+    private Groups parseCardElement(Element el){
+        Groups res = new Groups();
+        res.setFacultyName(
+                el.getElementsByTag("button").first().text()
+        );
+
+        for(Element p2: el.getElementsByClass("p-2")){
+            res.getGroups().add(p2.getAllElements().first().text());
         }
         return res;
     }
