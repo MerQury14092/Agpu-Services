@@ -99,37 +99,6 @@ public class GetNewsService {
         return res;
     }
 
-    private FullArticle parseArticlePageLegacy(Element element, int id){
-        FullArticle res = new FullArticle();
-        res.setTitle(
-                element.getElementsByTag("h1")
-                        .first()
-                        .text()
-        );
-        res.setId(id);
-        res.setDate(
-                element.getElementsByClass("news-date")
-                        .first()
-                        .text()
-        );
-        StringBuilder description = new StringBuilder();
-        for(Element el: element.getElementsByClass("news-detail")
-                .first()
-                .getElementsByTag("div")
-                .first()
-                .getElementsByTag("p")){
-            if(el.attributes().isEmpty())
-                description.append(el.text()).append("\n");
-            else if (el.hasAttr("style")) {
-                res.getImages().add(
-                        el.getElementsByTag("img").attr("src")
-                );
-            }
-        }
-        res.setDescription(description.toString());
-        return res;
-    }
-
     private PreviewArticle parsePreviewArticleElement(Element el) {
         PreviewArticle res = new PreviewArticle();
         res.setId(
@@ -156,44 +125,6 @@ public class GetNewsService {
             );
         res.setPreviewImage(
                 hostSite
-                        +
-                        el.getElementsByTag("img")
-                                .first()
-                                .attr("src")
-        );
-        res.setDate(
-                el.getElementsByTag("li")
-                        .get(1)
-                        .text()
-        );
-        return res;
-    }
-    private PreviewArticle parsePreviewArticleElementLegacy(Element el) {
-        PreviewArticle res = new PreviewArticle();
-        res.setId(
-                Integer.parseInt(
-                        Objects.requireNonNull(el.getElementsByTag("a")
-                                        .first())
-                                .attr("href")
-                                .split("news=")[1]
-                )
-        );
-        res.setTitle(
-                Objects.requireNonNull(Objects.requireNonNull(el.getElementsByTag("h4")
-                                        .first())
-                                .getAllElements()
-                                .first())
-                        .text()
-        );
-
-        if(!el.getElementsByTag("p").isEmpty())
-            res.setDescription(
-                    el.getElementsByTag("p")
-                            .first()
-                            .text()
-            );
-        res.setPreviewImage(
-                "http://agpu.net"
                         +
                         el.getElementsByTag("img")
                                 .first()
