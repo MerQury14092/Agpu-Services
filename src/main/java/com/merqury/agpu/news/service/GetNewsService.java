@@ -71,6 +71,14 @@ public class GetNewsService {
                     )
             );
         }
+        for(Element el: doc.getElementsByTag("font")){
+            if(el.text().contains("След. | Конец")) {
+                if(els.isEmpty())
+                    result.setCountPages(page);
+            }
+        }
+        if(result.getCurrentPage() > result.getCountPages())
+            result.setCurrentPage(1);
         return result;
     }
 
