@@ -1,4 +1,13 @@
 name: main
 
 on:
+  push:
+    branches:
+      - master
+
 jobs:
+  nop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: no
+        run: echo 'no'
