@@ -20,6 +20,11 @@ import java.util.List;
 public class NewsController {
     private final GetNewsService service;
 
+    @GetMapping
+    public List<PreviewArticle> gatGeneralNews() throws IOException {
+        return service.getAgpuNews();
+    }
+
     @GetMapping("/{faculty}")
     public List<PreviewArticle> getArticlesByFaculty(
             @PathVariable String faculty
