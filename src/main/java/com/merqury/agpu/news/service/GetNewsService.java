@@ -21,7 +21,7 @@ import static com.merqury.agpu.general.AgpuConstants.hostSite;
 public class GetNewsService {
     private static final String urlForEverything = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?PAGEN_1=%d";
     private static final String urlForArticle = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?ELEMENT_ID=%d";
-    private final static String urlAgpuNews = "http://www.agpu.net/umu/Praktika/NEWS/Default.aspx";
+    private final static String urlAgpuNews = "http://test.agpu.net/news.php";
 
     public List<PreviewArticle> getArticlesByFaculty(String faculty) throws IOException {
         List<PreviewArticle> res = new ArrayList<>();
@@ -34,12 +34,12 @@ public class GetNewsService {
     public FullArticle getArticleById(String faculty, int id) throws IOException{
         Document doc;
         if(faculty.equals("agpu")) {
-            doc = Jsoup.parse(new URL(urlAgpuNews + "?news=" + id), 5000);
-            return parseArticlePageLegacy(Objects.requireNonNull(doc.getElementsByClass("col-md-9 md-padding main-content").first()), id);
+            doc = Jsoup.parse(new URL(urlAgpuNews + "?ELEMENT_ID=" + id), 5000);
+            return parseArticlePage(Objects.requireNonNull(doc.getElementsByClass(/*"col-md-9 md-padding main-content"*/"mb-3").first()), id);
         }
         else {
             doc = Jsoup.parse(new URL(String.format(urlForArticle, faculty, id)), 5000);
-            return parseArticlePage(Objects.requireNonNull(doc.getElementsByClass("mb-3").first()));
+            return parseArticlePage(Objects.requireNonNull(doc.getElementsByClass("mb-3").first()), id);
         }
     }
 
@@ -47,11 +47,11 @@ public class GetNewsService {
         Document doc = Jsoup.parse(new URL(urlAgpuNews), 5000);
         List<PreviewArticle> res = new ArrayList<>();
         for (Element el : doc.getElementsByTag("article"))
-            res.add(parsePreviewArticleElementLegacy(el));
+            res.add(parsePreviewArticleElement(el));
         return res;
     }
 
-    private FullArticle parseArticlePage(Element element){
+    private FullArticle parseArticlePage(Element element, int id){
         Element el = element.getElementsByClass("news-detail-body").first();
         FullArticle res = new FullArticle();
         assert el != null;
@@ -65,12 +65,7 @@ public class GetNewsService {
                         .first()).text()
         );
 
-        res.setId(
-                Integer.parseInt(
-                        element.attr("id")
-                                .split("_")[2]
-                )
-        );
+        res.setId(id);
         StringBuilder description = new StringBuilder();
         for(Element p: el.getElementsByAttributeValue("style", "text-align: justify;"))
             description.append(p.text()).append("\n");
