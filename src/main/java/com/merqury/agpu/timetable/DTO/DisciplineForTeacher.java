@@ -4,35 +4,37 @@ package com.merqury.agpu.timetable.DTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 @AllArgsConstructor
-public class Discipline {
+public class DisciplineForTeacher {
     @JsonIgnore
     private String date;
     private String time;
     private String name;
+    @JsonIgnore
     private String teacherName;
     private String audienceId;
     private int subgroup;
     private DisciplineType type;
-    @JsonIgnore
     private String groupName;
     @JsonIgnore
     private int colspan;
 
-    public Discipline() {
+    public DisciplineForTeacher() {
     }
 
-    public static Discipline holiday(){
-        Discipline res = new Discipline();
+    public static DisciplineForTeacher holiday(){
+        DisciplineForTeacher res = new DisciplineForTeacher();
         res.setName("HOLIDAY");
         return res;
     }
 
-    public Discipline proxy() throws CloneNotSupportedException {
-        return new Discipline(
+    public DisciplineForTeacher proxy() throws CloneNotSupportedException {
+        return new DisciplineForTeacher(
                 date,
                 time,
                 name,
@@ -43,19 +45,5 @@ public class Discipline {
                 groupName,
                 colspan
         );
-    }
-
-    public DisciplineForTeacher mapForTeacher(){
-        return DisciplineForTeacher.builder()
-                .date(date)
-                .time(time)
-                .teacherName(teacherName)
-                .name(name)
-                .audienceId(audienceId)
-                .subgroup(subgroup)
-                .type(type)
-                .groupName(groupName)
-                .colspan(colspan)
-                .build();
     }
 }
