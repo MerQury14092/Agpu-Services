@@ -41,7 +41,6 @@ public class GetGroupIdService {
 
         List<Groups> res = new ArrayList<>();
 
-        String[] arr = builder.toString().split("\n");
         for(Element el : Jsoup.parse(builder.toString()).getElementsByClass("card")) {
             res.add(parseCardElement(el));
         }

@@ -2,6 +2,7 @@ package com.merqury.agpu.timetable.rest;
 
 import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Groups;
+import com.merqury.agpu.timetable.DTO.TeacherDay;
 import com.merqury.agpu.timetable.DTO.Week;
 import com.merqury.agpu.timetable.service.GetGroupIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
@@ -53,6 +54,17 @@ public class TimetableController {
     @GetMapping("/weeks")
     public List<Week> getWeeks(){
         return weeksService.getEverything();
+    }
+
+    @GetMapping("/teacher/day")
+    public TeacherDay getTeacherTimetable(
+            @PathParam("") String teacherId,
+            @PathParam("") String date
+    ) throws IOException {
+        return service.getDisciplinesByTeacher(
+                teacherId,
+                date
+        );
     }
 
     @GetMapping("/groups")

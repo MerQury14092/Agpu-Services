@@ -8,8 +8,8 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class Discipline {
-    //@JsonIgnore
+public class DisciplineForTeacher {
+    @JsonIgnore
     private String date;
     private String time;
     private String name;
@@ -17,22 +17,21 @@ public class Discipline {
     private String audienceId;
     private int subgroup;
     private DisciplineType type;
-    //@JsonIgnore
     private String groupName;
     @JsonIgnore
     private int colspan;
 
-    public Discipline() {
+    public DisciplineForTeacher() {
     }
 
-    public static Discipline holiday(){
-        Discipline res = new Discipline();
+    public static DisciplineForTeacher holiday(){
+        DisciplineForTeacher res = new DisciplineForTeacher();
         res.setName("HOLIDAY");
         return res;
     }
 
-    public Discipline proxy() throws CloneNotSupportedException {
-        return new Discipline(
+    public DisciplineForTeacher proxy() throws CloneNotSupportedException {
+        return new DisciplineForTeacher(
                 date,
                 time,
                 name,
