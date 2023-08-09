@@ -48,6 +48,14 @@ public class GetTimetableService {
         return proxyList(result);
     }
 
+    public List<TeacherDay> getDisciplinesTeacher(String teacherName, String startDate, String endDate) throws IOException {
+        List<TeacherDay> result = new ArrayList<>();
+        for(String date: getDatesBetween(startDate, endDate)) {
+            result.add(getDisciplinesByTeacher(teacherName, date));
+        }
+        return proxyListTeacher(result);
+    }
+
     public Day getDisciplines(String groupName, String date) throws IOException {
 
 
@@ -243,6 +251,17 @@ public class GetTimetableService {
     }
 
     private TeacherDay parseHtmlTeacher(String url, String date, String teacherName) throws IOException {
+
+        String fio = getTeacherIdService.getFIO(teacherName).split(",")[0];
+
+        if(fio.equals("None"))
+            return TeacherDay.builder()
+                    .teacherName(teacherName)
+                    .date(date)
+                    .disciplines(List.of(DisciplineForTeacher.holiday()))
+                    .build();
+        teacherName = fio;
+
         TeacherDay day = teacherTimetableMemory.getDisciplineByDate(teacherName, date);
         List<DisciplineForTeacher> result = day.getDisciplines();
         if(!result.isEmpty()) {
@@ -291,17 +310,16 @@ public class GetTimetableService {
         dataFilterForTeacher(result, allDisciplines, date);
 
         assignMissingDataAndCachingForTeacher(teacherName, result, col, date);
+        String teacherNama = "";
 
-        String teacherNama;
         if(!result.isEmpty())
             teacherNama = result.get(0).getTeacherName();
-        else
+        if(result.isEmpty() || result.get(0).getName().equals("HOLIDAY"))
             teacherNama = teacherName;
 
         if(result.isEmpty()) {
             result.add(DisciplineForTeacher.holiday());
         }
-
         return TeacherDay.builder()
                 .teacherName(teacherNama)
                 .date(date)
@@ -444,6 +462,12 @@ public class GetTimetableService {
     private List<Day> proxyList(List<Day> source){
         List<Day> res = new ArrayList<>();
         for(Day day: source)
+            res.add(day.proxy());
+        return res;
+    }
+    private List<TeacherDay> proxyListTeacher(List<TeacherDay> source){
+        List<TeacherDay> res = new ArrayList<>();
+        for(TeacherDay day: source)
             res.add(day.proxy());
         return res;
     }
