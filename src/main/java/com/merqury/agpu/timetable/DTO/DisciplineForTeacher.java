@@ -4,15 +4,18 @@ package com.merqury.agpu.timetable.DTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 @AllArgsConstructor
 public class DisciplineForTeacher {
     @JsonIgnore
     private String date;
     private String time;
     private String name;
+    @JsonIgnore
     private String teacherName;
     private String audienceId;
     private int subgroup;

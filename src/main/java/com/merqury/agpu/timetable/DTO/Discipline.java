@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class Discipline {
-    //@JsonIgnore
+    @JsonIgnore
     private String date;
     private String time;
     private String name;
@@ -17,7 +17,7 @@ public class Discipline {
     private String audienceId;
     private int subgroup;
     private DisciplineType type;
-    //@JsonIgnore
+    @JsonIgnore
     private String groupName;
     @JsonIgnore
     private int colspan;
@@ -43,5 +43,19 @@ public class Discipline {
                 groupName,
                 colspan
         );
+    }
+
+    public DisciplineForTeacher mapForTeacher(){
+        return DisciplineForTeacher.builder()
+                .date(date)
+                .time(time)
+                .teacherName(teacherName)
+                .name(name)
+                .audienceId(audienceId)
+                .subgroup(subgroup)
+                .type(type)
+                .groupName(groupName)
+                .colspan(colspan)
+                .build();
     }
 }

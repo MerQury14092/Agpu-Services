@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class TeacherDay {
     String date;
     String teacherName;
-    List<Discipline> disciplines;
+    List<DisciplineForTeacher> disciplines;
 
     @JsonIgnore
     public boolean isEmpty(){
@@ -28,10 +28,10 @@ public class TeacherDay {
     }
 
     public TeacherDay proxy(){
-        List<Discipline> proxyList = new ArrayList<>();
+        List<DisciplineForTeacher> proxyList = new ArrayList<>();
 
-        for (Discipline disc: disciplines) {
-            Discipline proxyDisc;
+        for (DisciplineForTeacher disc: disciplines) {
+            DisciplineForTeacher proxyDisc;
             try {
                 proxyDisc = disc.proxy();
             } catch (CloneNotSupportedException e) {
