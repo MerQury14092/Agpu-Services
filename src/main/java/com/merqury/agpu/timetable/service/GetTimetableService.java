@@ -256,7 +256,7 @@ public class GetTimetableService {
 
         if(fio.equals("None"))
             return TeacherDay.builder()
-                    .teacherName(teacherName)
+                    .teacherName("None")
                     .date(date)
                     .disciplines(List.of(DisciplineForTeacher.holiday()))
                     .build();
