@@ -61,10 +61,13 @@ public class TimetableController {
             @PathParam("") String teacherId,
             @PathParam("") String date
     ) throws IOException {
-        return service.getDisciplinesByTeacher(
+        TeacherDay res = service.getDisciplinesByTeacher(
                 teacherId,
                 date
         ).deleteHolidays();
+        if(res.getTeacherName().equals("None"))
+            res.setTeacherName("Unknown teacher");
+        return res;
     }
 
     @GetMapping("/teacher/days")
@@ -79,6 +82,8 @@ public class TimetableController {
             result.forEach(TeacherDay::deleteHolidays);
             if(removeNull)
                 result.removeIf(TeacherDay::isEmpty);
+            if(result.get(0).getTeacherName().equals("None"))
+                return List.of();
             return result;
         }
         return null;
