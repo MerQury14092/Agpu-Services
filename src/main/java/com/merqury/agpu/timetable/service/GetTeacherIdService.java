@@ -47,9 +47,9 @@ public class GetTeacherIdService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if(result.length == 0)
-            return "None";
-        else
-            return result[0].SearchContent;
+        for(SearchProduct prod: result)
+            if(prod.Type.equals("Teacher"))
+                return prod.SearchContent;
+        return "None";
     }
 }
