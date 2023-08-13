@@ -58,4 +58,16 @@ public class Discipline {
                 .colspan(colspan)
                 .build();
     }
+
+    public boolean equals(Discipline other){
+        return this.date.equals(other.date) &&
+                this.time.equals(other.time) &&
+                this.name.equals(other.name) &&
+                this.teacherName.equals(other.teacherName) &&
+                this.type.equals(other.type) &&
+                this.groupName.equals(other.groupName) &&
+                this.subgroup == other.subgroup &&
+                this.audienceId.equals(other.audienceId) &&
+                this.colspan == other.colspan;
+    }
 }

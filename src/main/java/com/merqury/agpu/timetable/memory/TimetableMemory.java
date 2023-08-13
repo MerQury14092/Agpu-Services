@@ -24,7 +24,7 @@ public class TimetableMemory {
         Thread cleaner = new Thread(() -> {
             log.info("task fo remove added");
             try {
-                Thread.sleep(TimeUnit.HOURS.toMillis(4));
+                Thread.sleep(TimeUnit.MINUTES.toMillis(30));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -50,5 +50,9 @@ public class TimetableMemory {
                 .groupName(groupName)
                 .disciplines(Collections.emptyList())
                 .build();
+    }
+
+    public void rm(Day day){
+        memory.remove(day);
     }
 }

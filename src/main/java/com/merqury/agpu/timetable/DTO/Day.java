@@ -46,4 +46,17 @@ public class Day {
                 .disciplines(proxyList)
                 .build();
     }
+
+    public boolean equals(Day other){
+
+        if(!other.date.equals(this.date) || !other.groupName.equals(this.groupName) || other.disciplines.size() != this.disciplines.size())
+            return false;
+
+        for (int i = 0; i < this.disciplines.size(); i++) {
+            if(!this.disciplines.get(i).equals(other.disciplines.get(i)))
+                return false;
+        }
+
+        return true;
+    }
 }

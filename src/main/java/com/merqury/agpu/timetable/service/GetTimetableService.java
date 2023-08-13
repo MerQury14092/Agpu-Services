@@ -70,7 +70,27 @@ public class GetTimetableService {
                         "Group",
                         weekId),
                 date,
-                groupName
+                groupName,
+                true
+        ).proxy();
+    }
+
+    public Day getDisciplinesWithoutCache(String groupName, String date) throws IOException {
+
+
+        int mappingWeekId = 3100;
+
+        long weekId = mappingWeekId + countDays(date) / 7;
+
+        return parseHtml(String.format(
+                        url,
+                        ownerId,
+                        getGroupIdService.getId(groupName),
+                        "Group",
+                        weekId),
+                date,
+                groupName,
+                false
         ).proxy();
     }
 
@@ -168,15 +188,17 @@ public class GetTimetableService {
     }
 
 
-    private Day parseHtml(String url, String date, String groupName) throws IOException {
+    private Day parseHtml(String url, String date, String groupName, boolean cache) throws IOException {
         Day day = studentTimetableMemory.getDisciplineByDate(groupName, date);
         List<Discipline> result = day.getDisciplines();
-        if(!result.isEmpty()) {
-            log.info("info: memory call");
-            return day;
+        if(cache){
+            if(!result.isEmpty()) {
+                log.info("info: memory call");
+                return day;
+            }
+
         }
         result = new ArrayList<>();
-
         log.info("info: it-institut call");
         URL url1 = new URL(url);
 
@@ -221,17 +243,20 @@ public class GetTimetableService {
             parseDay(elements.get(i), allDisciplines);
         }
 
-        for(String tmpDate: getDatesBetween(allDisciplines.get(0).getDate(), allDisciplines.get(allDisciplines.size()-1).getDate())){
-            List<Discipline> tmpArray = new ArrayList<>();
-            if(tmpDate.equals(date))
-                continue;
-            dataFilter(tmpArray, allDisciplines, tmpDate);
-            assignMissingDataAndCaching(groupName, tmpArray, col, tmpDate);
+        if(cache){
+            for(String tmpDate: getDatesBetween(allDisciplines.get(0).getDate(), allDisciplines.get(allDisciplines.size()-1).getDate())){
+                List<Discipline> tmpArray = new ArrayList<>();
+                if(tmpDate.equals(date))
+                    continue;
+                dataFilter(tmpArray, allDisciplines, tmpDate);
+                assignMissingDataAndCaching(groupName, tmpArray, col, tmpDate);
+            }
         }
 
         dataFilter(result, allDisciplines, date);
 
-        assignMissingDataAndCaching(groupName, result, col, date);
+        if(cache)
+            assignMissingDataAndCaching(groupName, result, col, date);
 
         String groupNama;
         if(!result.isEmpty())
