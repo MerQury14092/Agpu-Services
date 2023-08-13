@@ -28,14 +28,18 @@ public class Notificator {
     public void notifyWebhooks(String groupName, Day modifiedDay){
         try {
             for(String url: memory.urls(groupName)){
+                log.info("group: {}, day: {}", groupName, modifiedDay);
                 HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
                 connection.setRequestMethod("POST");
-                connection.setReadTimeout(15000);
-                connection.setConnectTimeout(15000);
                 connection.setDoOutput(true);
                 PrintWriter pw = new PrintWriter(connection.getOutputStream(), true);
                 pw.println(mapper.writeValueAsString(modifiedDay));
+                connection.setReadTimeout(5000);
+                connection.setConnectTimeout(5000);
+                connection.getInputStream();
             }
-        } catch (IOException ignored){}
+        } catch (IOException e){
+            log.error(e.getMessage());
+        }
     }
 }

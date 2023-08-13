@@ -6,6 +6,7 @@ import com.merqury.agpu.timetable.memory.TimetableMemory;
 import com.merqury.agpu.timetable.service.GetGroupIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Log4j2
 public class Updater implements Runnable{
     private final GetTimetableService timetableService;
     private final GetGroupIdService groupIdService;
@@ -40,6 +42,7 @@ public class Updater implements Runnable{
     @SneakyThrows
     @Override
     public void run() {
+        log.info("Start updating");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         String today = LocalDateTime.now().format(formatter);
         String tomorrow = LocalDateTime.now().plusDays(1).format(formatter);
@@ -47,7 +50,7 @@ public class Updater implements Runnable{
         for(Groups faculty: groups){
             new Thread(() -> {
                 for(String group: faculty.getGroups()){
-                    Day real = null;
+                    Day real;
                     Day cache = timetableMemory.getDisciplineByDate(group, today);
                     try {
                         real = timetableService.getDisciplinesWithoutCache(group, today);

@@ -13,11 +13,6 @@ public class NotificationMemory {
 
     public NotificationMemory(){
         webhooks = new ArrayList<>();
-        add(ReservedWebhook.builder()
-                .url("http://localhost:8080/notify")
-                .groups(
-                        List.of("ВМ-ИВТ-1-1", "ВМ-ИВТ-2-1").toArray(new String[0])
-                ).build());
     }
 
     public void add(ReservedWebhook webhook){
