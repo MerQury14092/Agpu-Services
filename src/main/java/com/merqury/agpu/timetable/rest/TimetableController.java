@@ -129,6 +129,8 @@ public class TimetableController {
         result.forEach(Day::deleteHolidays);
         if (removeNull)
             result.removeIf(Day::isEmpty);
+        if(result.isEmpty())
+            return List.of();
         if(result.get(0).getGroupName() == null)
             result.get(0).setGroupName(groupName);
         else if (result.get(0).getGroupName().equals("None"))
@@ -209,6 +211,8 @@ public class TimetableController {
         result.forEach(TeacherDay::deleteHolidays);
         if(removeNull)
             result.removeIf(TeacherDay::isEmpty);
+        if(result.isEmpty())
+            return List.of();
         if(result.get(0).getTeacherName().equals("None"))
             return List.of(
                     TeacherDay.builder()
