@@ -1,6 +1,7 @@
 package com.merqury.agpu.timetable.memory;
 
 import com.merqury.agpu.timetable.DTO.Day;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Log4j2
 public class TimetableMemory {
     private final List<Day> memory;
 
@@ -31,7 +33,7 @@ public class TimetableMemory {
     }
 
     public Day getDisciplineByDate(String groupName, String date){
-
+        //log.info("disciplines in memory: {}", memory);
         var res =  memory.stream()
                 .filter(day -> (day.getGroupName().equals(groupName) && day.getDate().equals(date)))
                 .toList();

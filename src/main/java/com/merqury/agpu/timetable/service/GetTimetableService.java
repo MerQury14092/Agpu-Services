@@ -7,6 +7,7 @@ import com.merqury.agpu.timetable.DTO.TeacherDay;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import com.merqury.agpu.timetable.memory.TeacherTimetableMemory;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
+import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
+@Log4j2
 public class GetTimetableService {
     private final GetGroupIdService getGroupIdService;
     private final TimetableMemory studentTimetableMemory;
@@ -191,10 +193,13 @@ public class GetTimetableService {
         List<Discipline> result = day.getDisciplines();
         if(cache){
             if(!result.isEmpty()) {
+                log.info("memory call");
                 return day;
             }
 
         }
+        if(cache)
+            log.info("api call");
         result = new ArrayList<>();
         URL url1 = new URL(url);
 
