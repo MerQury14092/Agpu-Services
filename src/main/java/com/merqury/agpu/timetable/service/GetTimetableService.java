@@ -110,6 +110,10 @@ public class GetTimetableService {
         ).proxy();
     }
 
+    public void updateDay(Day cahce, Day update){
+
+    }
+
     private void dataFilter(List<Discipline> result, List<Discipline> allDisciplines, String cur) {
         for (Discipline discipline : allDisciplines) {
             if (discipline.getDate().equals(cur)) {
@@ -351,7 +355,38 @@ public class GetTimetableService {
                 .build();
     }
 
-    private void assignMissingDataAndCaching(String groupName, List<Discipline> result, Integer[] col, String date) {
+    private void assignMissingDataAndCaching(String groupName, List<Discipline> result, Integer[] col, String date){
+        assignMissingData(groupName, result, col, date);
+        caching(groupName, result, date);
+    }
+
+    private void caching(String groupName, List<Discipline> result, String date){
+        if(!result.isEmpty()){
+            Day check = studentTimetableMemory.getDisciplineByDate(groupName, result.get(0).getDate());
+            if(!check.isEmpty()) {
+                return;
+            }
+        }
+
+        String groupNama;
+        if(!result.isEmpty())
+            groupNama = result.get(0).getGroupName();
+        else
+            groupNama = groupName;
+
+        if(result.isEmpty()) {
+            result.add(Discipline.holiday());
+        }
+
+        studentTimetableMemory.addDiscipline(Day.builder()
+                .groupName(groupNama)
+                .date(date)
+                .disciplines(result)
+                .build()
+        );
+    }
+
+    private void assignMissingData(String groupName, List<Discipline> result, Integer[] col, String date) {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {
@@ -394,32 +429,6 @@ public class GetTimetableService {
             else
                 el.setType(DisciplineType.none);
         });
-
-
-        if(!result.isEmpty()){
-            Day check = studentTimetableMemory.getDisciplineByDate(groupName, result.get(0).getDate());
-            if(!check.isEmpty()) {
-                return;
-            }
-        }
-
-        String groupNama;
-        if(!result.isEmpty())
-            groupNama = result.get(0).getGroupName();
-        else
-            groupNama = groupName;
-
-        if(result.isEmpty()) {
-            result.add(Discipline.holiday());
-        }
-
-
-        studentTimetableMemory.addDiscipline(Day.builder()
-                .groupName(groupNama)
-                .date(date)
-                .disciplines(result)
-                .build()
-        );
     }
     private void assignMissingDataAndCachingForTeacher(String teacherName, List<DisciplineForTeacher> result, Integer[] col, String date) {
         Integer[] pairs = new Integer[result.size()];

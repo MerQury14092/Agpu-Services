@@ -34,7 +34,7 @@ public class Notificator {
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setDoOutput(true);
                 PrintWriter pw = new PrintWriter(connection.getOutputStream(), true);
-                pw.println(mapper.writeValueAsString(modifiedDay.deleteHolidays()));
+                pw.println(mapper.writeValueAsString(modifiedDay.proxy().deleteHolidays()));
                 connection.setReadTimeout(5000);
                 connection.setConnectTimeout(5000);
                 connection.getResponseCode();

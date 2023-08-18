@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -33,7 +34,7 @@ public class Updater implements Runnable{
             Notificator notificator,
             TimetableMemory memory
     ){
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this, 0, 3, TimeUnit.MINUTES);
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this, 0, 30, TimeUnit.MINUTES);
         timetableService = getTimetableService;
         groupIdService = getGroupIdService;
         this.notificator = notificator;
@@ -46,7 +47,7 @@ public class Updater implements Runnable{
         log.info("Start updating");
         long start = System.currentTimeMillis();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        String today = LocalDateTime.now().format(formatter);
+        String today = LocalDate.of(2023, 4, 18).format(formatter);
         String tomorrow = LocalDateTime.now().plusDays(1).format(formatter);
         List<Groups> groups = groupIdService.getAllGroups();
         ExecutorService service = Executors.newFixedThreadPool(50);
@@ -59,17 +60,13 @@ public class Updater implements Runnable{
                         real = timetableService.getDisciplinesWithoutCache(group, today);
                         if (!cache.equals(real)) {
                             notificator.notifyWebhooks(group, real);
-                            timetableMemory.rm(cache);
-                            timetableMemory.addDiscipline(real);
-                            if(group.equals("ВМ-ИВТ-1-1"))
-                                log.error("DONT EQ: \n\nREAL: {}\nCACHE: {}\n", real, cache);
+                            timetableService.updateDay(cache, real);
                         }
                         cache = timetableMemory.getDisciplineByDate(group, tomorrow);
                         real = timetableService.getDisciplinesWithoutCache(group, tomorrow);
                         if (!cache.equals(real)) {
                             notificator.notifyWebhooks(group, real);
-                            timetableMemory.rm(cache);
-                            timetableMemory.addDiscipline(real);
+                            timetableService.updateDay(cache, real);
                         }
                     } catch (IOException e){
                         throw new RuntimeException(e);
@@ -78,7 +75,9 @@ public class Updater implements Runnable{
             }
         }
         service.shutdown();
-        service.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+        boolean ignored = service.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         log.info("Finish updating in {} sec", (System.currentTimeMillis()-start)/1000);
     }
 }
+
+
