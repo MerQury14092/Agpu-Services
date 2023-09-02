@@ -20,7 +20,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Scanner;
 
 @Service
 @Log4j2
@@ -59,7 +62,7 @@ public class GetTimetableService {
     public Day getDisciplines(String groupName, String date) throws IOException {
 
 
-        int mappingWeekId = 3100;
+        int mappingWeekId = 3655;
 
         long weekId = mappingWeekId + countDays(date) / 7;
 
@@ -145,24 +148,12 @@ public class GetTimetableService {
     }
 
     private long countDays(String endDate) {
-        String[] part = "29.08.2022".split("\\.");
-        Date dt = new Date(
-                Integer.parseInt(part[2]),
-                Integer.parseInt(part[1]) - 1,
-                Integer.parseInt(part[0])
-        );
-        long currentTime = dt.getTime();
-        long mappingWeek = currentTime / 1000 / 60 / 60 / 24;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        LocalDate dt = LocalDate.parse("28.08.2023", formatter);
+        long mappingWeek = dt.toEpochDay();
 
-
-        part = endDate.split("\\.");
-        dt = new Date(
-                Integer.parseInt(part[2]),
-                Integer.parseInt(part[1]) - 1,
-                Integer.parseInt(part[0])
-        );
-        currentTime = dt.getTime();
-        long currentWeek = (long) (currentTime / 1000d / 60 / 60 / 24);
+        dt = LocalDate.parse(endDate, formatter);
+        long currentWeek = dt.toEpochDay();
 
         return (currentWeek - mappingWeek);
     }
