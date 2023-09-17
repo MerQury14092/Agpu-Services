@@ -2,6 +2,7 @@ package com.merqury.agpu.timetable.service;
 
 import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Discipline;
+import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.DTO.TeacherDay;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import com.merqury.agpu.timetable.memory.TeacherTimetableMemory;
@@ -42,10 +43,10 @@ public class GetTimetableService {
     private static final int ownerId = 118;
     private static final String url = "http://www.it-institut.ru/Raspisanie/SearchedRaspisanie?OwnerId=%d&SearchId=%d&SearchString=None&Type=%s&WeekId=%d";
 
-    public List<Day> getDisciplines(String groupName, String startDate, String endDate) throws IOException {
-        List<Day> result = new ArrayList<>();
+    public List<GroupDay> getDisciplines(String groupName, String startDate, String endDate) throws IOException {
+        List<GroupDay> result = new ArrayList<>();
         for(String date: getDatesBetween(startDate, endDate)) {
-            result.add(getDisciplines(groupName, date));
+            result.add((GroupDay) getDisciplines(groupName, date, false));
         }
         return proxyList(result);
     }
@@ -53,12 +54,12 @@ public class GetTimetableService {
     public List<TeacherDay> getDisciplinesTeacher(String teacherName, String startDate, String endDate) throws IOException {
         List<TeacherDay> result = new ArrayList<>();
         for(String date: getDatesBetween(startDate, endDate)) {
-            result.add(getDisciplinesByTeacher(teacherName, date));
+            result.add((TeacherDay) getDisciplines(teacherName, date, true));
         }
         return proxyListTeacher(result);
     }
 
-    public Day getDisciplines(String groupName, String date) throws IOException {
+    public Day getDisciplines(String id, String date, boolean forTeacher) throws IOException {
 
 
         int mappingWeekId = 3655;
@@ -68,27 +69,12 @@ public class GetTimetableService {
         return parseHtml(String.format(
                         url,
                         ownerId,
-                        getGroupIdService.getId(groupName),
-                        "Group",
+                        forTeacher?getTeacherIdService.getId(id):getGroupIdService.getId(id),
+                        forTeacher?"Teacher":"Group",
                         weekId),
                 date,
-                groupName
-        ).proxy();
-    }
-
-    public TeacherDay getDisciplinesByTeacher(String teacherName, String date) throws IOException{
-        int mappingWeekId = 3655;
-
-        long weekId = mappingWeekId + countDays(date) / 7;
-
-        return parseHtmlTeacher(String.format(
-                        url,
-                        ownerId,
-                        getTeacherIdService.getId(teacherName),
-                        "Teacher",
-                        weekId),
-                date,
-                teacherName
+                id,
+                forTeacher
         ).proxy();
     }
 
@@ -140,9 +126,22 @@ public class GetTimetableService {
     }
 
 
-    private Day parseHtml(String url, String date, String groupName) throws IOException {
+    private Day parseHtml(String url, String date, String id, boolean forTeacher) throws IOException {
+        String fio;
 
-        Day day = studentTimetableMemory.getDisciplineByDate(groupName, date);
+        if(forTeacher){
+            fio = getTeacherIdService.getFIO(id).split(",")[0];
+
+            if(fio.equals("None"))
+                return TeacherDay.builder()
+                        .teacherName("None")
+                        .date(date)
+                        .disciplines(List.of(Discipline.holiday()))
+                        .build();
+            id = fio;
+        }
+
+        Day day = forTeacher?teacherTimetableMemory.getDisciplineByDate(id, date):studentTimetableMemory.getDisciplineByDate(id, date);
         List<Discipline> result = day.getDisciplines();
         if(!result.isEmpty()) {
             log.info("info: memory call");
@@ -199,108 +198,37 @@ public class GetTimetableService {
             if(tmpDate.equals(date))
                 continue;
             dataFilter(tmpArray, allDisciplines, tmpDate);
-            assignMissingDataAndCaching(groupName, tmpArray, col, tmpDate);
+            assignMissingDataAndCaching(id, tmpArray, col, tmpDate, forTeacher);
         }
 
         dataFilter(result, allDisciplines, date);
 
-        assignMissingDataAndCaching(groupName, result, col, date);
+        assignMissingDataAndCaching(id, result, col, date, forTeacher);
 
-        String groupNama;
+        String name;
         if(!result.isEmpty())
-            groupNama = result.get(0).getGroupName();
-        else
-            groupNama = groupName;
+            name = forTeacher?result.get(0).getTeacherName():result.get(0).getGroupName();
+        else name = id;
 
         if(result.isEmpty()) {
             result.add(Discipline.holiday());
         }
 
-        return Day.builder()
-                .date(date)
-                .groupName(groupNama)
-                .disciplines(result)
-                .build();
-    }
-
-    private TeacherDay parseHtmlTeacher(String url, String date, String teacherName) throws IOException {
-
-        String fio = getTeacherIdService.getFIO(teacherName).split(",")[0];
-
-        if(fio.equals("None"))
-            return TeacherDay.builder()
-                    .teacherName("None")
+        if(!forTeacher)
+            return GroupDay.builder()
                     .date(date)
-                    .disciplines(List.of(Discipline.holiday()))
+                    .groupName(name)
+                    .disciplines(result)
                     .build();
-        teacherName = fio;
-
-        TeacherDay day = teacherTimetableMemory.getDisciplineByDate(teacherName, date);
-        List<Discipline> result = day.getDisciplines();
-        if(!result.isEmpty()) {
-            log.info("info: memory call");
-            return day;
-        }
-        result = new ArrayList<>();
-
-        log.info("info: it-institut call on url: {}", url);
-        URL url1 = new URL(url);
-
-        Document doc = Jsoup.parse(url1, 15000);
-
-        Elements elements = Objects.requireNonNull(Objects.requireNonNull(doc
-                                .getElementsByClass("table")
-                                .first())
-                        .getElementsByTag("tbody")
-                        .first())
-                .getElementsByTag("tr");
-
-        Elements times = Objects.requireNonNull(Objects.requireNonNull(doc
-                                .getElementsByClass("thead-light")
-                                .first())
-                        .getElementsByTag("tr")
-                        .first())
-                .getElementsByTag("th");
-
-        Integer[] col = parseCol(times);
-
-        List<Discipline> allDisciplines = new ArrayList<>();
-
-        for (int i = 0; i < 7; i++) {
-            parseDay(elements.get(i), allDisciplines);
-        }
-
-        for(String tmpDate: getDatesBetween(allDisciplines.get(0).getDate(), allDisciplines.get(allDisciplines.size()-1).getDate())){
-            List<Discipline> tmpArray = new ArrayList<>();
-            if(tmpDate.equals(date))
-                continue;
-            dataFilter(tmpArray, allDisciplines, tmpDate);
-            assignMissingDataAndCachingForTeacher(teacherName, tmpArray, col, tmpDate);
-        }
-
-
-
-        dataFilter(result, allDisciplines, date);
-
-        assignMissingDataAndCachingForTeacher(teacherName, result, col, date);
-        String teacherNama = "";
-
-        if(!result.isEmpty())
-            teacherNama = result.get(0).getTeacherName();
-        if(result.isEmpty() || result.get(0).getName().equals("HOLIDAY"))
-            teacherNama = teacherName;
-
-        if(result.isEmpty()) {
-            result.add(Discipline.holiday());
-        }
-        return TeacherDay.builder()
-                .teacherName(teacherNama)
-                .date(date)
-                .disciplines(result)
-                .build();
+        else
+            return TeacherDay.builder()
+                    .teacherName(name)
+                    .date(date)
+                    .disciplines(result)
+                    .build();
     }
 
-    private void assignMissingDataAndCaching(String groupName, List<Discipline> result, Integer[] col, String date) {
+    private void assignMissingDataAndCaching(String id, List<Discipline> result, Integer[] col, String date, boolean forTeacher) {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {
@@ -364,7 +292,7 @@ public class GetTimetableService {
 
 
         if(!result.isEmpty()){
-            Day check = studentTimetableMemory.getDisciplineByDate(groupName, result.get(0).getDate());
+            Day check = forTeacher?teacherTimetableMemory.getDisciplineByDate(id, result.get(0).getDate()):studentTimetableMemory.getDisciplineByDate(id, result.get(0).getDate());
             if(!check.isEmpty()) {
                 return;
             }
@@ -374,104 +302,33 @@ public class GetTimetableService {
         if(!result.isEmpty())
             groupNama = result.get(0).getGroupName();
         else
-            groupNama = groupName;
+            groupNama = id;
 
         if(result.isEmpty()) {
             result.add(Discipline.holiday());
         }
 
 
-        studentTimetableMemory.addDiscipline(Day.builder()
-                .groupName(groupNama)
-                .date(date)
-                .disciplines(result)
-                .build()
-        );
-    }
-    private void assignMissingDataAndCachingForTeacher(String teacherName, List<Discipline> result, Integer[] col, String date) {
-        Integer[] pairs = new Integer[result.size()];
-        for (int i = 0; i < pairs.length; i++) {
-            if(result.get(i) == null) {
-                pairs[i] = col[i];
-                continue;
-            }
-            pairs[i] = result.get(i).getColspan();
-        }
-
-        Integer[] res = res(col, pairs);
-
-        for (int i = 0; i < result.size(); i++) {
-            if(result.get(i) == null)
-                continue;
-            result.get(i).setTime(timeByIndex(res[i]));
-        }
-
-        result.removeIf(Objects::isNull);
-
-        result.forEach(el -> {
-            String d_name = el.getName();
-            if(d_name.toLowerCase().contains("лек.")) {
-                el.setType(DisciplineType.lec);
-                el.setName(el.getName().replace(",лек.", ""));
-            }
-            else if(d_name.toLowerCase().contains("прак.")) {
-                el.setType(DisciplineType.prac);
-                el.setName(el.getName().replace(",прак.", ""));
-            }
-            else if(d_name.toLowerCase().contains("экз.")) {
-                el.setType(DisciplineType.exam);
-                el.setName(el.getName().replace(",экз.", ""));
-            }
-            else if(d_name.toLowerCase().contains("лаб.")) {
-                el.setType(DisciplineType.lab);
-                el.setName(el.getName().replace(",лаб.", ""));
-            }
-            else if(d_name.toLowerCase().contains("каникулы")) {
-                el.setType(DisciplineType.hol);
-                el.setName(el.getName().replace(",каникулы.", ""));
-            }
-            else if(d_name.toLowerCase().contains("выходной")) {
-                el.setType(DisciplineType.hol);
-                el.setName(el.getName().replace(",выходной.", ""));
-            }
-            else if(d_name.toLowerCase().contains("зач.")) {
-                el.setType(DisciplineType.cred);
-                el.setName(el.getName().replace(",зач.", ""));
-            }
-            else if(d_name.toLowerCase().contains("конс.")) {
-                el.setType(DisciplineType.cons);
-                el.setName(el.getName().replace(",конс.", ""));
-            }
-            else if(d_name.toLowerCase().contains("фэпо")) {
-                el.setType(DisciplineType.fepo);
-                el.setName(el.getName().replace(",фэпо.", ""));
-            }
-            else
-                el.setType(DisciplineType.none);
-        });
-
-
-        if(!result.isEmpty()){
-            TeacherDay check = teacherTimetableMemory.getDisciplineByDate(teacherName, result.get(0).getDate());
-            if(!check.isEmpty()) {
-                return;
-            }
-        }
-
-        if(result.isEmpty())
-            result.add(Discipline.holiday());
-        teacherTimetableMemory.addDiscipline(TeacherDay.builder()
-                .teacherName(teacherName)
-                .date(date)
-                .disciplines(result)
-                .build()
-        );
+        if(forTeacher)
+            teacherTimetableMemory.addDiscipline(TeacherDay.builder()
+                    .teacherName(id)
+                    .date(date)
+                    .disciplines(result)
+                    .build()
+            );
+        else
+            studentTimetableMemory.addDiscipline(GroupDay.builder()
+                    .groupName(groupNama)
+                    .date(date)
+                    .disciplines(result)
+                    .build()
+            );
     }
 
-    private List<Day> proxyList(List<Day> source){
-        List<Day> res = new ArrayList<>();
-        for(Day day : source)
-            res.add(day.proxy());
+    private List<GroupDay> proxyList(List<GroupDay> source){
+        List<GroupDay> res = new ArrayList<>();
+        for(GroupDay groupDay : source)
+            res.add(groupDay.proxy());
         return res;
     }
     private List<TeacherDay> proxyListTeacher(List<TeacherDay> source){
