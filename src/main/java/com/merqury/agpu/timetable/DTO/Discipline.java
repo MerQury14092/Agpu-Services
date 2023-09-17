@@ -17,7 +17,6 @@ public class Discipline {
     private String audienceId;
     private int subgroup;
     private DisciplineType type;
-    @JsonIgnore
     private String groupName;
     @JsonIgnore
     private int colspan;
