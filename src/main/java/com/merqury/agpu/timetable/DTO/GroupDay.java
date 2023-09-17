@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
-public class TeacherDay extends Day{
+public class GroupDay extends Day{
     String date;
-    String teacherName;
+    String groupName;
     List<Discipline> disciplines;
 
     @JsonIgnore
@@ -22,14 +22,14 @@ public class TeacherDay extends Day{
         return disciplines.isEmpty();
     }
 
-    public TeacherDay deleteHolidays(){
+    public GroupDay deleteHolidays(){
         disciplines = disciplines.stream()
                 .filter(discipline -> !discipline.getName().equals("HOLIDAY"))
                 .collect(Collectors.toList());
         return this;
     }
 
-    public TeacherDay proxy(){
+    public GroupDay proxy(){
         List<Discipline> proxyList = new ArrayList<>();
 
         for (Discipline disc: disciplines) {
@@ -42,9 +42,9 @@ public class TeacherDay extends Day{
             proxyList.add(proxyDisc);
         }
 
-        return TeacherDay.builder()
+        return GroupDay.builder()
                 .date(date)
-                .teacherName(teacherName)
+                .groupName(groupName)
                 .disciplines(proxyList)
                 .build();
     }
