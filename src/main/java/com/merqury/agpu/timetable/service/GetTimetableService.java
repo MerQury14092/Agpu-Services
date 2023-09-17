@@ -340,24 +340,42 @@ public class GetTimetableService {
 
         result.forEach(el -> {
             String d_name = el.getName();
-            if(d_name.toLowerCase().contains("лек."))
+            if(d_name.toLowerCase().contains("лек.")) {
                 el.setType(DisciplineType.lec);
-            else if(d_name.toLowerCase().contains("прак."))
+                el.setName(d_name.replace(",лек.", ""));
+            }
+            else if(d_name.toLowerCase().contains("прак.")) {
                 el.setType(DisciplineType.prac);
-            else if(d_name.toLowerCase().contains("экз."))
+                el.setName(d_name.replace(",прак.", ""));
+            }
+            else if(d_name.toLowerCase().contains("экз.")) {
                 el.setType(DisciplineType.exam);
-            else if(d_name.toLowerCase().contains("лаб."))
+                el.setName(d_name.replace(",экз.", ""));
+            }
+            else if(d_name.toLowerCase().contains("лаб.")) {
                 el.setType(DisciplineType.lab);
-            else if(d_name.toLowerCase().contains("каникулы"))
+                el.setName(d_name.replace(",лаб.", ""));
+            }
+            else if(d_name.toLowerCase().contains("каникулы")) {
                 el.setType(DisciplineType.hol);
-            else if(d_name.toLowerCase().contains("выходной"))
+                el.setName(d_name.replace(",каникулы.", ""));
+            }
+            else if(d_name.toLowerCase().contains("выходной")) {
                 el.setType(DisciplineType.hol);
-            else if(d_name.toLowerCase().contains("зач."))
+                el.setName(d_name.replace(",выходной.", ""));
+            }
+            else if(d_name.toLowerCase().contains("зач.")) {
                 el.setType(DisciplineType.cred);
-            else if(d_name.toLowerCase().contains("конс."))
+                el.setName(d_name.replace(",зач.", ""));
+            }
+            else if(d_name.toLowerCase().contains("конс.")) {
                 el.setType(DisciplineType.cons);
-            else if(d_name.toLowerCase().contains("фэпо"))
+                el.setName(d_name.replace(",конс.", ""));
+            }
+            else if(d_name.toLowerCase().contains("фэпо")) {
                 el.setType(DisciplineType.fepo);
+                el.setName(d_name.replace(",фэпо.", ""));
+            }
             else
                 el.setType(DisciplineType.none);
         });
@@ -410,24 +428,42 @@ public class GetTimetableService {
 
         result.forEach(el -> {
             String d_name = el.getName();
-            if(d_name.toLowerCase().contains("лек."))
+            if(d_name.toLowerCase().contains("лек.")) {
                 el.setType(DisciplineType.lec);
-            else if(d_name.toLowerCase().contains("прак."))
+                el.setName(el.getName().replace(",лек.", ""));
+            }
+            else if(d_name.toLowerCase().contains("прак.")) {
                 el.setType(DisciplineType.prac);
-            else if(d_name.toLowerCase().contains("экз."))
+                el.setName(el.getName().replace(",прак.", ""));
+            }
+            else if(d_name.toLowerCase().contains("экз.")) {
                 el.setType(DisciplineType.exam);
-            else if(d_name.toLowerCase().contains("лаб."))
+                el.setName(el.getName().replace(",экз.", ""));
+            }
+            else if(d_name.toLowerCase().contains("лаб.")) {
                 el.setType(DisciplineType.lab);
-            else if(d_name.toLowerCase().contains("каникулы"))
+                el.setName(el.getName().replace(",лаб.", ""));
+            }
+            else if(d_name.toLowerCase().contains("каникулы")) {
                 el.setType(DisciplineType.hol);
-            else if(d_name.toLowerCase().contains("выходной"))
+                el.setName(el.getName().replace(",каникулы.", ""));
+            }
+            else if(d_name.toLowerCase().contains("выходной")) {
                 el.setType(DisciplineType.hol);
-            else if(d_name.toLowerCase().contains("зач."))
+                el.setName(el.getName().replace(",выходной.", ""));
+            }
+            else if(d_name.toLowerCase().contains("зач.")) {
                 el.setType(DisciplineType.cred);
-            else if(d_name.toLowerCase().contains("конс."))
+                el.setName(el.getName().replace(",зач.", ""));
+            }
+            else if(d_name.toLowerCase().contains("конс.")) {
                 el.setType(DisciplineType.cons);
-            else if(d_name.toLowerCase().contains("фэпо"))
+                el.setName(el.getName().replace(",конс.", ""));
+            }
+            else if(d_name.toLowerCase().contains("фэпо")) {
                 el.setType(DisciplineType.fepo);
+                el.setName(el.getName().replace(",фэпо.", ""));
+            }
             else
                 el.setType(DisciplineType.none);
         });
