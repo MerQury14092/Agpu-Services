@@ -44,15 +44,28 @@ public class ImageManagerController {
 
     @PostMapping(value = "/day", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] day(
-            @RequestBody Day day
+            @RequestBody Day day,
+            HttpServletResponse response,
+            HttpServletRequest request
     ) throws IOException {
-        BufferedImage res = service.getImageByTimetableOfDay(day);
+        if(request.getParameter("vertical") == null && request.getParameter("horizontal") == null)
+            response.sendError(400);
+        else if(request.getParameter("vertical") != null && request.getParameter("horizontal") != null)
+            response.sendError(400);
+
+        // TODO: realize vertical column
+        if(request.getParameter("vertical") != null){
+            response.sendError(501);
+            return null;
+        }
+
+        BufferedImage res = service.getImageByTimetableOfDay(day, request.getParameter("vertical") != null);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(res, "PNG", baos);
         return baos.toByteArray();
     }
 
-    @PostMapping(value = "/7days", produces = MediaType.IMAGE_PNG_VALUE)
+    @PostMapping(value = "/6days", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] days(
             @RequestBody Day[] days,
             HttpServletResponse response,
@@ -62,7 +75,14 @@ public class ImageManagerController {
             response.sendError(400);
         else if(request.getParameter("vertical") != null && request.getParameter("horizontal") != null)
             response.sendError(400);
-        BufferedImage res = service.getImageByTimetableOf7Days(days, request.getParameter("vertical") != null);
+
+        // TODO: realize vertical table
+        if(request.getParameter("vertical") != null){
+            response.sendError(501);
+            return null;
+        }
+
+        BufferedImage res = service.getImageByTimetableOf6Days(days, request.getParameter("vertical") != null);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(res, "PNG", baos);
         return baos.toByteArray();
