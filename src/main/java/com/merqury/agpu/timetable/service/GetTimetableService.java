@@ -2,7 +2,6 @@ package com.merqury.agpu.timetable.service;
 
 import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Discipline;
-import com.merqury.agpu.timetable.DTO.DisciplineForTeacher;
 import com.merqury.agpu.timetable.DTO.TeacherDay;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import com.merqury.agpu.timetable.memory.TeacherTimetableMemory;
@@ -78,7 +77,7 @@ public class GetTimetableService {
     }
 
     public TeacherDay getDisciplinesByTeacher(String teacherName, String date) throws IOException{
-        int mappingWeekId = 3100;
+        int mappingWeekId = 3655;
 
         long weekId = mappingWeekId + countDays(date) / 7;
 
@@ -98,24 +97,6 @@ public class GetTimetableService {
             if (discipline.getDate().equals(cur)) {
                 if (discipline.getName() != null)
                     result.add(discipline);
-                else
-                    result.add(null);
-            }
-        }
-        for (; ; ) {
-            if (result.isEmpty())
-                break;
-            if (result.get(result.size() - 1) == null)
-                result.remove(result.size() - 1);
-            else
-                break;
-        }
-    }
-    private void dataFilterForTeacher(List<DisciplineForTeacher> result, List<Discipline> allDisciplines, String cur) {
-        for (Discipline discipline : allDisciplines) {
-            if (discipline.getDate().equals(cur)) {
-                if (discipline.getName() != null)
-                    result.add(discipline.mapForTeacher());
                 else
                     result.add(null);
             }
@@ -160,6 +141,7 @@ public class GetTimetableService {
 
 
     private Day parseHtml(String url, String date, String groupName) throws IOException {
+
         Day day = studentTimetableMemory.getDisciplineByDate(groupName, date);
         List<Discipline> result = day.getDisciplines();
         if(!result.isEmpty()) {
@@ -168,7 +150,7 @@ public class GetTimetableService {
         }
         result = new ArrayList<>();
 
-        log.info("info: it-institut call");
+        log.info("info: it-institut call on url: {}", url);
         URL url1 = new URL(url);
 
         HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
@@ -249,19 +231,19 @@ public class GetTimetableService {
             return TeacherDay.builder()
                     .teacherName("None")
                     .date(date)
-                    .disciplines(List.of(DisciplineForTeacher.holiday()))
+                    .disciplines(List.of(Discipline.holiday()))
                     .build();
         teacherName = fio;
 
         TeacherDay day = teacherTimetableMemory.getDisciplineByDate(teacherName, date);
-        List<DisciplineForTeacher> result = day.getDisciplines();
+        List<Discipline> result = day.getDisciplines();
         if(!result.isEmpty()) {
             log.info("info: memory call");
             return day;
         }
         result = new ArrayList<>();
 
-        log.info("info: it-institut call");
+        log.info("info: it-institut call on url: {}", url);
         URL url1 = new URL(url);
 
         Document doc = Jsoup.parse(url1, 15000);
@@ -289,16 +271,16 @@ public class GetTimetableService {
         }
 
         for(String tmpDate: getDatesBetween(allDisciplines.get(0).getDate(), allDisciplines.get(allDisciplines.size()-1).getDate())){
-            List<DisciplineForTeacher> tmpArray = new ArrayList<>();
+            List<Discipline> tmpArray = new ArrayList<>();
             if(tmpDate.equals(date))
                 continue;
-            dataFilterForTeacher(tmpArray, allDisciplines, tmpDate);
+            dataFilter(tmpArray, allDisciplines, tmpDate);
             assignMissingDataAndCachingForTeacher(teacherName, tmpArray, col, tmpDate);
         }
 
 
 
-        dataFilterForTeacher(result, allDisciplines, date);
+        dataFilter(result, allDisciplines, date);
 
         assignMissingDataAndCachingForTeacher(teacherName, result, col, date);
         String teacherNama = "";
@@ -309,7 +291,7 @@ public class GetTimetableService {
             teacherNama = teacherName;
 
         if(result.isEmpty()) {
-            result.add(DisciplineForTeacher.holiday());
+            result.add(Discipline.holiday());
         }
         return TeacherDay.builder()
                 .teacherName(teacherNama)
@@ -406,7 +388,7 @@ public class GetTimetableService {
                 .build()
         );
     }
-    private void assignMissingDataAndCachingForTeacher(String teacherName, List<DisciplineForTeacher> result, Integer[] col, String date) {
+    private void assignMissingDataAndCachingForTeacher(String teacherName, List<Discipline> result, Integer[] col, String date) {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {
@@ -477,7 +459,7 @@ public class GetTimetableService {
         }
 
         if(result.isEmpty())
-            result.add(DisciplineForTeacher.holiday());
+            result.add(Discipline.holiday());
         teacherTimetableMemory.addDiscipline(TeacherDay.builder()
                 .teacherName(teacherName)
                 .date(date)
@@ -488,7 +470,7 @@ public class GetTimetableService {
 
     private List<Day> proxyList(List<Day> source){
         List<Day> res = new ArrayList<>();
-        for(Day day: source)
+        for(Day day : source)
             res.add(day.proxy());
         return res;
     }

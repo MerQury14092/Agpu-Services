@@ -40,7 +40,7 @@ public class TimetableMemory {
         memory.forEach(log::info);
 
         var res =  memory.stream()
-                .filter(day -> (day.getGroupName().equals(groupName) && day.getDate().equals(date)))
+                .filter(groupDay -> (groupDay.getGroupName().equals(groupName) && groupDay.getDate().equals(date)))
                 .toList();
         if(!res.isEmpty())
             return res.get(0);
