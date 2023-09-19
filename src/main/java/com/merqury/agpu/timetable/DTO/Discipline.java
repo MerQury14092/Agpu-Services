@@ -43,18 +43,4 @@ public class Discipline {
                 colspan
         );
     }
-
-    public DisciplineForTeacher mapForTeacher(){
-        return DisciplineForTeacher.builder()
-                .date(date)
-                .time(time)
-                .teacherName(teacherName)
-                .name(name)
-                .audienceId(audienceId)
-                .subgroup(subgroup)
-                .type(type)
-                .groupName(groupName)
-                .colspan(colspan)
-                .build();
-    }
 }

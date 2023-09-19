@@ -7,7 +7,7 @@
 * `groupId` - имя группы
 * `date` - дата дня в формате dd.MM.yyyy
 
-URL: ***http://merqury.fun:8080/api/timetable/day***
+URL: ***http://merqury.fun:8080/api/timetable/groupDay***
 
 <hr>
 
