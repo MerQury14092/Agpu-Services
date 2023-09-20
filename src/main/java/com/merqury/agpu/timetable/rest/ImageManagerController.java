@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.rest;
 
-import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Discipline;
+import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.service.ImageService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,24 +27,28 @@ public class ImageManagerController {
 
     @PostMapping(value = "/discipline", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] discipline(
-            @RequestBody Discipline disc1,
-            @RequestBody(required = false) Discipline disc2
+            @RequestBody Discipline[] disc,
+            HttpServletResponse response
     ) throws IOException {
-        if(disc2 != null) {
-            BufferedImage res = service.getImageByTimetableOfSubDiscipline(disc1, disc2);
+        if(disc.length == 2) {
+            BufferedImage res = service.getImageByTimetableOfSubDiscipline(disc[0], disc[1], 600);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(res, "PNG", baos);
             return baos.toByteArray();
         }
-        BufferedImage res = service.getImageByTimetableOfDiscipline(disc1);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(res, "PNG", baos);
-        return baos.toByteArray();
+        else if(disc.length == 1) {
+            BufferedImage res = service.getImageByTimetableOfDiscipline(disc[0], 600);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(res, "PNG", baos);
+            return baos.toByteArray();
+        }
+        response.sendError(400);
+        return null;
     }
 
     @PostMapping(value = "/day", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] day(
-            @RequestBody Day day,
+            @RequestBody GroupDay day,
             HttpServletResponse response,
             HttpServletRequest request
     ) throws IOException {
@@ -59,7 +63,7 @@ public class ImageManagerController {
             return null;
         }
 
-        BufferedImage res = service.getImageByTimetableOfDay(day, request.getParameter("vertical") != null);
+        BufferedImage res = service.getImageByTimetableOfDay(day, request.getParameter("vertical") != null, 600);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(res, "PNG", baos);
         return baos.toByteArray();
@@ -67,7 +71,7 @@ public class ImageManagerController {
 
     @PostMapping(value = "/6days", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] days(
-            @RequestBody Day[] days,
+            @RequestBody GroupDay[] days,
             HttpServletResponse response,
             HttpServletRequest request
     ) throws IOException {
@@ -82,7 +86,7 @@ public class ImageManagerController {
             return null;
         }
 
-        BufferedImage res = service.getImageByTimetableOf6Days(days, request.getParameter("vertical") != null);
+        BufferedImage res = service.getImageByTimetableOf6Days(days, request.getParameter("vertical") != null, 600);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(res, "PNG", baos);
         return baos.toByteArray();
