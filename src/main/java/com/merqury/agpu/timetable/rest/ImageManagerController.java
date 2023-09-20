@@ -63,10 +63,13 @@ public class ImageManagerController {
             return null;
         }
 
-        BufferedImage res = service.getImageByTimetableOfDay(day, request.getParameter("vertical") != null, 600);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(res, "PNG", baos);
-        return baos.toByteArray();
+        if(request.getParameter("vertical") == null) {
+            BufferedImage res = service.getImageByTimetableOfDayHorizontal(day, 600, false);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(res, "PNG", baos);
+            return baos.toByteArray();
+        }
+        return null;
     }
 
     @PostMapping(value = "/6days", produces = MediaType.IMAGE_PNG_VALUE)
@@ -86,9 +89,12 @@ public class ImageManagerController {
             return null;
         }
 
-        BufferedImage res = service.getImageByTimetableOf6Days(days, request.getParameter("vertical") != null, 600);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(res, "PNG", baos);
-        return baos.toByteArray();
+        if(request.getParameter("vertical") == null) {
+            BufferedImage res = service.getImageByTimetableOf6DaysHorizontal(days, 600, false);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(res, "PNG", baos);
+            return baos.toByteArray();
+        }
+        return null;
     }
 }
