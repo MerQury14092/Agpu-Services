@@ -57,19 +57,16 @@ public class ImageManagerController {
         else if(request.getParameter("vertical") != null && request.getParameter("horizontal") != null)
             response.sendError(400);
 
-        // TODO: realize vertical column
-        if(request.getParameter("vertical") != null){
-            response.sendError(501);
-            return null;
-        }
-
         if(request.getParameter("vertical") == null) {
             BufferedImage res = service.getImageByTimetableOfDayHorizontal(day, 600, false);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(res, "PNG", baos);
             return baos.toByteArray();
         }
-        return null;
+        BufferedImage res = service.getImageByTimetableOfDayVertical(day, 600, true);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(res, "PNG", baos);
+        return baos.toByteArray();
     }
 
     @PostMapping(value = "/6days", produces = MediaType.IMAGE_PNG_VALUE)

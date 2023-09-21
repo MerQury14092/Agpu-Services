@@ -110,6 +110,67 @@ public class ImageService {
         return header;
     }
 
+    public BufferedImage headerForVertical(){
+        BufferedImage header = new BufferedImage(150, 1550, BufferedImage.TYPE_INT_RGB);
+
+        Graphics2D header_g = header.createGraphics();
+        header_g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        header_g.setColor(Color.WHITE);
+        header_g.fillRect(0, 0, header.getWidth(), header.getHeight());
+        header_g.setColor(Color.BLACK);
+
+        header_g.setStroke(new BasicStroke(3));
+        header_g.setColor(Color.decode("#d0d0d0"));
+        header_g.fillRect(0, 0, header.getWidth(), header.getHeight());
+        header_g.setColor(Color.BLACK);
+        header_g.drawRect(0, 0, 150, 150);
+        for (int i = 0; i < 7; i++) {
+            int offset = 25;
+            header_g.drawRect(0, 150+i*200, 150, 200);
+        }
+
+
+        int y_buf = -50;
+
+        int offset = 20;
+        float fontSize = 24;
+
+        printString_new(header_g, "I пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "8:00", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "9:40", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
+
+        printString_new(header_g, "II пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "9:40", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "11:10", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
+
+
+        printString_new(header_g, "III пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "11:40", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "13:10", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
+
+
+        printString_new(header_g, "IV пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "13:30", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "15:00", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
+
+
+        printString_new(header_g, "V пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "15:10", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "16:40", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
+
+
+        printString_new(header_g, "VI пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "16:50", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "18:20", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
+
+
+        printString_new(header_g, "VII пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "18:30", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "20:00", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
+
+        return header;
+    }
+
     private void printString_new(Graphics2D g, String str, Rectangle r, Font font){
         Font last = g.getFont();
         g.setFont(font);
@@ -126,6 +187,11 @@ public class ImageService {
     public BufferedImage getImageByTimetableOfDayHorizontal(Day day, int cellWidth, boolean forTable){
         return getImageByTimetableOfDayHorizontal(day, cellWidth, forTable, 7);
     }
+    public BufferedImage getImageByTimetableOfDayVertical(Day day, int cellWidth, boolean forTable){
+        return getImageByTimetableOfDayVertical(day, cellWidth, forTable, 7);
+    }
+
+
 
     public BufferedImage getImageByTimetableOfDayHorizontal(Day day, int cellWidth, boolean forTable, int countCells){
         for(Discipline disc: day.getDisciplines()){
@@ -181,6 +247,86 @@ public class ImageService {
                 continue;
             }
             g.drawImage(getImageByTimetableOfDiscipline(disc, cellWidth), 150 + disc.getColspan() * cellWidth, 150-(forTable?150:0), null);
+            i++;
+        }
+
+        for (int j = 0; j < (forTable?countCells:countPairs(day)); j++) {
+            g.drawRect(150+j*cellWidth, 150-(forTable?150:0), cellWidth, res.getHeight());
+        }
+
+        g.setStroke(new BasicStroke(3));
+        g.drawRect(0, 150-(forTable?150:0), res.getWidth(), res.getHeight());
+
+        return res;
+    }
+
+    public BufferedImage getImageByTimetableOfDayVertical(Day day, int cellWidth, boolean forTable, int countCells){
+        for(Discipline disc: day.getDisciplines()){
+            disc.setColspan(switch (disc.getTime()){
+                case "8:00-9:30" -> 0;
+                case "9:40-11:10" -> 1;
+                case "11:40-13:10" -> 2;
+                case "13:30-15:00" -> 3;
+                case "15:10-16:40" -> 4;
+                case "16:50-18:20" -> 5;
+                case "18:30-20:00" -> 6;
+                default -> -1;
+            });
+        }
+        BufferedImage res = new BufferedImage((forTable?0:150)+cellWidth, 150+200*(forTable ? countCells : countPairs(day)), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = res.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, res.getWidth(), res.getHeight());
+        g.setColor(Color.BLACK);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        g.setStroke(new BasicStroke(3));
+
+        g.setColor(Color.decode("#d0d0d0"));
+        g.fillRect((forTable?0:150), 0, cellWidth, res.getHeight());
+        g.setColor(Color.BLACK);
+        g.drawRect((forTable?0:150), 0, cellWidth, res.getHeight());
+
+        if(!forTable)
+            g.drawImage(headerForVertical(), 0, 0, null);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+
+        LocalDate date = LocalDate.parse(day.getDate(), formatter);
+
+        String dayOfWeek = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.forLanguageTag("RU"));
+        dayOfWeek = Character.toUpperCase(dayOfWeek.charAt(0))+dayOfWeek.substring(1);
+
+
+        printString_new(g, dayOfWeek, new Rectangle(forTable?0:150, 25, cellWidth, 20), font.deriveFont(20f));
+        printString_new(g, day.getDate(), new Rectangle(forTable?0:150, 50, cellWidth, 20), font.deriveFont(20f));
+
+        g.drawRect(forTable?0:150, 100, cellWidth, 50);
+        g.drawRect(forTable?0:150, 100, cellWidth/2, 50);
+
+        printString_new(g, "I", new Rectangle(forTable?0:150, 100, cellWidth/2, 50), font.deriveFont(24f));
+        printString_new(g, "II", new Rectangle(forTable?0:150+cellWidth/2, 100, cellWidth/2, 50), font.deriveFont(24f));
+
+        int i = 0;
+
+        List<Discipline> disciplines = day.getDisciplines();
+        for (int j = 0; j < disciplines.size(); j++) {
+            Discipline disc = disciplines.get(j);
+            if(j != disciplines.size() - 1){
+                if(disc.getColspan() == disciplines.get(j+1).getColspan()) {
+                    g.drawRect(150-(forTable?150:0), 150+i*200, cellWidth, 200);
+                    continue;
+                }
+            }
+            if(j != 0 && disc.getColspan() == disciplines.get(j-1).getColspan()){
+                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth), 150-(forTable?150:0), 150+i*200, null);
+                g.drawRect(150-(forTable?150:0), 150+i*200, cellWidth, 200);
+                i++;
+                continue;
+            }
+            g.drawImage(getImageByTimetableOfDiscipline(disc, cellWidth), 150-(forTable?150:0), 150+200*disc.getColspan(), null);
+            g.drawRect(150-(forTable?150:0), 150+i*200, cellWidth, 200);
             i++;
         }
 
