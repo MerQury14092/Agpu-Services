@@ -342,6 +342,8 @@ public class ImageService {
     }
 
     private int countPairs(Day day){
+        if(day.getDisciplines().isEmpty())
+            return 0;
         return switch (day.getDisciplines().get(day.getDisciplines().size()-1).getTime()){
             case "8:00-9:30" -> 1;
             case "9:40-11:10" -> 2;
