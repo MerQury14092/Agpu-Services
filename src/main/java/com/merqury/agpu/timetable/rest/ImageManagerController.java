@@ -58,7 +58,7 @@ public class ImageManagerController {
             response.sendError(400);
 
         if(request.getParameter("vertical") == null) {
-            BufferedImage res = service.getImageByTimetableOfDayHorizontal(day, 600, false);
+            BufferedImage res = service.getImageByTimetableOfDayHorizontal(day, 600, true);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(res, "PNG", baos);
             return baos.toByteArray();

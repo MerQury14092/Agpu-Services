@@ -22,7 +22,7 @@ public class ImageService {
     private Font font;
 
     public ImageService() throws IOException, FontFormatException {
-        this.font = Font.createFont(Font.TRUETYPE_FONT, ImageService.class.getResourceAsStream("/fonts/timetable_font.ttf")).deriveFont(Font.BOLD, 16f);
+        this.font = Font.createFont(Font.TRUETYPE_FONT, ImageService.class.getResourceAsStream("/fonts/jetbrains-mono(bold).ttf")).deriveFont(Font.BOLD, 16f);
     }
 
     public BufferedImage getImageByTimetableOf6DaysHorizontal(Day[] days, int cellWidth, boolean full){
@@ -121,7 +121,7 @@ public class ImageService {
 
         header_g.setStroke(new BasicStroke(3));
         header_g.setColor(Color.decode("#d0d0d0"));
-        header_g.fillRect(0, 0, header.getWidth(), header.getHeight());
+        header_g.fillRect(0, 0, header.getWidth(), 150);
         header_g.setColor(Color.BLACK);
         header_g.drawRect(0, 0, 150, 150);
         for (int i = 0; i < 7; i++) {
@@ -283,7 +283,7 @@ public class ImageService {
         g.setStroke(new BasicStroke(3));
 
         g.setColor(Color.decode("#d0d0d0"));
-        g.fillRect((forTable?0:150), 0, cellWidth, res.getHeight());
+        g.fillRect((forTable?0:150), 0, cellWidth, 150);
         g.setColor(Color.BLACK);
         g.drawRect((forTable?0:150), 0, cellWidth, res.getHeight());
 
@@ -306,7 +306,7 @@ public class ImageService {
         g.drawRect(forTable?0:150, 100, cellWidth/2, 50);
 
         printString_new(g, "I", new Rectangle(forTable?0:150, 100, cellWidth/2, 50), font.deriveFont(24f));
-        printString_new(g, "II", new Rectangle(forTable?0:150+cellWidth/2, 100, cellWidth/2, 50), font.deriveFont(24f));
+        printString_new(g, "II", new Rectangle((forTable?0:150)+cellWidth/2, 100, cellWidth/2, 50), font.deriveFont(24f));
 
         int i = 0;
 
@@ -330,12 +330,13 @@ public class ImageService {
             i++;
         }
 
-        for (int j = 0; j < (forTable?countCells:countPairs(day)); j++) {
-            g.drawRect(150+j*cellWidth, 150-(forTable?150:0), cellWidth, res.getHeight());
-        }
-
         g.setStroke(new BasicStroke(3));
         g.drawRect(0, 150-(forTable?150:0), res.getWidth(), res.getHeight());
+
+        if(forTable)
+            for (int j = 0; j < countCells; j++) {
+                g.drawRect(0, 150+200*j, cellWidth, 200);
+            }
 
         return res;
     }
