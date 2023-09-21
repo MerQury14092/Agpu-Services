@@ -314,20 +314,20 @@ public class ImageService {
         for (int j = 0; j < disciplines.size(); j++) {
             Discipline disc = disciplines.get(j);
             if(j != disciplines.size() - 1){
-                if(disc.getColspan() == disciplines.get(j+1).getColspan()) {
-                    g.drawRect(150-(forTable?150:0), 150+i*200, cellWidth, 200);
+                if(disc.getColspan() == disciplines.get(j+1).getColspan())
                     continue;
-                }
             }
             if(j != 0 && disc.getColspan() == disciplines.get(j-1).getColspan()){
                 g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth), 150-(forTable?150:0), 150+i*200, null);
-                g.drawRect(150-(forTable?150:0), 150+i*200, cellWidth, 200);
                 i++;
                 continue;
             }
             g.drawImage(getImageByTimetableOfDiscipline(disc, cellWidth), 150-(forTable?150:0), 150+200*disc.getColspan(), null);
-            g.drawRect(150-(forTable?150:0), 150+i*200, cellWidth, 200);
             i++;
+        }
+
+        for (int j = 0; j < countPairs(day); j++) {
+            g.drawRect(150-(forTable?150:0), 150+j*200, cellWidth, 200);
         }
 
         g.setStroke(new BasicStroke(3));
