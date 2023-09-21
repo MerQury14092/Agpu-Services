@@ -242,7 +242,7 @@ public class ImageService {
                     continue;
             }
             if(j != 0 && disc.getColspan() == disciplines.get(j-1).getColspan()){
-                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth), 150 + i * cellWidth, 150-(forTable?150:0), null);
+                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth), 150 + disc.getColspan() * cellWidth, 150-(forTable?150:0), null);
                 i++;
                 continue;
             }
@@ -318,7 +318,7 @@ public class ImageService {
                     continue;
             }
             if(j != 0 && disc.getColspan() == disciplines.get(j-1).getColspan()){
-                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth), 150-(forTable?150:0), 150+i*200, null);
+                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth), 150-(forTable?150:0), 150+disc.getColspan()*200, null);
                 i++;
                 continue;
             }
@@ -343,16 +343,13 @@ public class ImageService {
 
     private int countPairs(Day day){
         if(day.getDisciplines().isEmpty())
-            return 0;
+            return 3;
         return switch (day.getDisciplines().get(day.getDisciplines().size()-1).getTime()){
-            case "8:00-9:30" -> 1;
-            case "9:40-11:10" -> 2;
-            case "11:40-13:10" -> 3;
             case "13:30-15:00" -> 4;
             case "15:10-16:40" -> 5;
             case "16:50-18:20" -> 6;
             case "18:30-20:00" -> 7;
-            default -> 0;
+            default -> 3;
         };
     }
 
@@ -379,12 +376,9 @@ public class ImageService {
         for(String line: lines(g, disc.getName(), res.getWidth(), font))
             printString(g, line, 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
         y = 230;
-        printString(g, disc.getTeacherName(), 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
-        printString(g, disc.getGroupName(), 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
-        printString(g, "Аудитория: "+disc.getAudienceId(), 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
         printString(g,
                 switch (disc.getType()){
-                    case lab -> "Лаба";
+                    case lab -> "Лаб. работа";
                     case fepo -> "ФЭПО";
                     case cred -> "Зачёт";
                     case cons -> "Консультация";
@@ -395,6 +389,9 @@ public class ImageService {
                     case none -> "";
                 }
                 , 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
+        printString(g, "Аудитория: "+disc.getAudienceId(), 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
+        printString(g, disc.getTeacherName(), 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
+        printString(g, disc.getGroupName(), 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
         return res;
     }
 
