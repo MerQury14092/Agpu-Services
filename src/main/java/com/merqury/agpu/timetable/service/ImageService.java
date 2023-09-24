@@ -3,6 +3,7 @@ package com.merqury.agpu.timetable.service;
 
 import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Discipline;
+import com.merqury.agpu.timetable.enums.DisciplineType;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 @Log4j2
@@ -25,7 +27,7 @@ public class ImageService {
         this.font = Font.createFont(Font.TRUETYPE_FONT, ImageService.class.getResourceAsStream("/fonts/jetbrains-mono(bold).ttf")).deriveFont(Font.BOLD, 16f);
     }
 
-    public BufferedImage getImageByTimetableOf6DaysHorizontal(Day[] days, int cellWidth, boolean full){
+    public BufferedImage getImageByTimetableOf6DaysHorizontal(Day[] days, int cellWidth, boolean full, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
         int max_pairs = countPairs(days[0]);
         for(Day day: days)
             if(countPairs(day) > max_pairs)
@@ -45,15 +47,15 @@ public class ImageService {
 
         for(Day day: days) {
             if(full)
-                g.drawImage(getImageByTimetableOfDayHorizontal(day, cellWidth, true), 0, y += 200, null);
+                g.drawImage(getImageByTimetableOfDayHorizontal(day, cellWidth, true, types, colors), 0, y += 200, null);
             else
-                g.drawImage(getImageByTimetableOfDayHorizontal(day, cellWidth, true, max_pairs), 0, y+=200, null);
+                g.drawImage(getImageByTimetableOfDayHorizontal(day, cellWidth, true, max_pairs, types, colors), 0, y+=200, null);
         }
 
         return res;
     }
 
-    public BufferedImage getImageByTimetableOf6DaysVertical(Day[] days, int cellWidth, boolean full){
+    public BufferedImage getImageByTimetableOf6DaysVertical(Day[] days, int cellWidth, boolean full, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
         int max_pairs = countPairs(days[0]);
         for(Day day: days)
             if(countPairs(day) > max_pairs)
@@ -69,7 +71,7 @@ public class ImageService {
         g.drawImage(headerForVertical(), res.getWidth()-150, 0, null);
 
         for (int i = 0; i < 6; i++) {
-            g.drawImage(getImageByTimetableOfDayVertical(days[i], 600, true, full?7:max_pairs), 150+i*cellWidth, 0, null);
+            g.drawImage(getImageByTimetableOfDayVertical(days[i], 600, true, full?7:max_pairs, types, colors), 150+i*cellWidth, 0, null);
         }
 
         return res;
@@ -108,7 +110,7 @@ public class ImageService {
         int x_buf = 150-cellWidth;
 
         printString_new(header_g, "I пара", new Rectangle(x_buf+=cellWidth, -header_g.getFontMetrics().getAscent()-10, cellWidth, 100), font.deriveFont(24f));
-        printString_new(header_g, "8:00-9:40", new Rectangle(x_buf, header_g.getFontMetrics().getAscent(), cellWidth, 100), font.deriveFont(24f));
+        printString_new(header_g, "8:00-9:30", new Rectangle(x_buf, header_g.getFontMetrics().getAscent(), cellWidth, 100), font.deriveFont(24f));
         printString_new(header_g, "II пара", new Rectangle(x_buf+=cellWidth, -header_g.getFontMetrics().getAscent()-10, cellWidth, 100), font.deriveFont(24f));
         printString_new(header_g, "9:40-11:10", new Rectangle(x_buf, header_g.getFontMetrics().getAscent(), cellWidth, 100), font.deriveFont(24f));
         printString_new(header_g, "III пара", new Rectangle(x_buf+=cellWidth, -header_g.getFontMetrics().getAscent()-10, cellWidth, 100), font.deriveFont(24f));
@@ -159,7 +161,7 @@ public class ImageService {
 
         printString_new(header_g, "I пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
         printString_new(header_g, "8:00", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
-        printString_new(header_g, "9:40", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
+        printString_new(header_g, "9:30", new Rectangle(0, (int) (y_buf+offset*2.5), 150, 150), font.deriveFont(fontSize));
 
         printString_new(header_g, "II пара", new Rectangle(0, -offset+(y_buf+=200), 150, 150), font.deriveFont(fontSize));
         printString_new(header_g, "9:40", new Rectangle(0, y_buf+offset, 150, 150), font.deriveFont(fontSize));
@@ -206,16 +208,16 @@ public class ImageService {
         g.setFont(last);
     }
 
-    public BufferedImage getImageByTimetableOfDayHorizontal(Day day, int cellWidth, boolean forTable){
-        return getImageByTimetableOfDayHorizontal(day, cellWidth, forTable, 7);
+    public BufferedImage getImageByTimetableOfDayHorizontal(Day day, int cellWidth, boolean forTable, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
+        return getImageByTimetableOfDayHorizontal(day, cellWidth, forTable, 7, types, colors);
     }
-    public BufferedImage getImageByTimetableOfDayVertical(Day day, int cellWidth, boolean forTable){
-        return getImageByTimetableOfDayVertical(day, cellWidth, forTable, 7);
+    public BufferedImage getImageByTimetableOfDayVertical(Day day, int cellWidth, boolean forTable, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
+        return getImageByTimetableOfDayVertical(day, cellWidth, forTable, 7, types, colors);
     }
 
 
 
-    public BufferedImage getImageByTimetableOfDayHorizontal(Day day, int cellWidth, boolean forTable, int countCells){
+    public BufferedImage getImageByTimetableOfDayHorizontal(Day day, int cellWidth, boolean forTable, int countCells, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
         for(Discipline disc: day.getDisciplines()){
             disc.setColspan(switch (disc.getTime()){
                 case "8:00-9:30" -> 0;
@@ -264,11 +266,11 @@ public class ImageService {
                     continue;
             }
             if(j != 0 && disc.getColspan() == disciplines.get(j-1).getColspan()){
-                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth), 150 + disc.getColspan() * cellWidth, 150-(forTable?150:0), null);
+                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth, types, colors), 150 + disc.getColspan() * cellWidth, 150-(forTable?150:0), null);
                 i++;
                 continue;
             }
-            g.drawImage(getImageByTimetableOfDiscipline(disc, cellWidth), 150 + disc.getColspan() * cellWidth, 150-(forTable?150:0), null);
+            g.drawImage(getImageByTimetableOfDiscipline(disc, cellWidth, types, colors), 150 + disc.getColspan() * cellWidth, 150-(forTable?150:0), null);
             i++;
         }
 
@@ -282,7 +284,7 @@ public class ImageService {
         return res;
     }
 
-    public BufferedImage getImageByTimetableOfDayVertical(Day day, int cellWidth, boolean forTable, int countCells){
+    public BufferedImage getImageByTimetableOfDayVertical(Day day, int cellWidth, boolean forTable, int countCells, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
         for(Discipline disc: day.getDisciplines()){
             disc.setColspan(switch (disc.getTime()){
                 case "8:00-9:30" -> 0;
@@ -340,11 +342,11 @@ public class ImageService {
                     continue;
             }
             if(j != 0 && disc.getColspan() == disciplines.get(j-1).getColspan()){
-                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth), 150-(forTable?150:0), 150+disc.getColspan()*200, null);
+                g.drawImage(getImageByTimetableOfSubDiscipline(disciplines.get(j-1), disc, cellWidth, types, colors), 150-(forTable?150:0), 150+disc.getColspan()*200, null);
                 i++;
                 continue;
             }
-            g.drawImage(getImageByTimetableOfDiscipline(disc, cellWidth), 150-(forTable?150:0), 150+200*disc.getColspan(), null);
+            g.drawImage(getImageByTimetableOfDiscipline(disc, cellWidth, types, colors), 150-(forTable?150:0), 150+200*disc.getColspan(), null);
             i++;
         }
 
@@ -375,19 +377,26 @@ public class ImageService {
         };
     }
 
-    public BufferedImage getImageByTimetableOfDiscipline(Discipline disc, int width){
+    public BufferedImage getImageByTimetableOfDiscipline(Discipline disc,
+                                                         int width,
+                                                         Map<DisciplineType, String> types,
+                                                         Map<DisciplineType, String> colors
+    ){
         BufferedImage res = new BufferedImage(width, 200, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = res.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setColor(
-                switch (disc.getType()){
-                    case lec -> Color.decode("#f7e3e7");
-                    case prac -> Color.decode("#e8e582");
-                    case lab -> Color.decode("#d3e2d0");
-                    case exam -> Color.decode("#f6574c");
-                    case fepo -> Color.decode("#ea48d0");
-                    default -> Color.WHITE;
-                }
+                colors.containsKey(disc.getType())?
+                        Color.decode(colors.get(disc.getType()))
+                        :
+                        switch (disc.getType()){
+                            case lec -> Color.decode("#f7e3e7");
+                            case prac -> Color.decode("#e8e582");
+                            case lab -> Color.decode("#d3e2d0");
+                            case exam -> Color.decode("#f6574c");
+                            case fepo -> Color.decode("#ea48d0");
+                            default -> Color.WHITE;
+                        }
         );
         g.fillRect(0, 0, res.getWidth(), res.getHeight());
         g.setColor(Color.BLACK);
@@ -399,17 +408,20 @@ public class ImageService {
             printString(g, line, 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
         y = 230;
         printString(g,
-                switch (disc.getType()){
-                    case lab -> "Лаб. работа";
-                    case fepo -> "ФЭПО";
-                    case cred -> "Зачёт";
-                    case cons -> "Консультация";
-                    case prac -> "Практика";
-                    case hol -> "Праздник";
-                    case lec -> "Лекция";
-                    case exam -> "Экзамен";
-                    case none -> "";
-                }
+                types.containsKey(disc.getType())?
+                        types.get(disc.getType())
+                        :
+                        switch (disc.getType()){
+                            case lab -> "Лаб. работа";
+                            case fepo -> "ФЭПО";
+                            case cred -> "Зачёт";
+                            case cons -> "Консультация";
+                            case prac -> "Практика";
+                            case hol -> "Праздник";
+                            case lec -> "Лекция";
+                            case exam -> "Экзамен";
+                            case none -> "";
+                        }
                 , 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
         printString(g, "Аудитория: "+disc.getAudienceId(), 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
         printString(g, disc.getTeacherName(), 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
@@ -461,13 +473,13 @@ public class ImageService {
         return res.toString().trim();
     }
 
-    public BufferedImage getImageByTimetableOfSubDiscipline(Discipline disc1, Discipline disc2, int width){
+    public BufferedImage getImageByTimetableOfSubDiscipline(Discipline disc1, Discipline disc2, int width, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
         BufferedImage res = new BufferedImage(width, 200, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = res.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g.drawImage(getImageByTimetableOfDiscipline(disc1, width/2), 0, 0, null);
-        g.drawImage(getImageByTimetableOfDiscipline(disc2, width/2), width/2, 0, null);
+        g.drawImage(getImageByTimetableOfDiscipline(disc1, width/2, types, colors), 0, 0, null);
+        g.drawImage(getImageByTimetableOfDiscipline(disc2, width/2, types, colors), width/2, 0, null);
         g.setStroke(new BasicStroke(3));
         g.setColor(Color.BLACK);
         g.drawLine(width/2, 0, width/2, res.getHeight());
