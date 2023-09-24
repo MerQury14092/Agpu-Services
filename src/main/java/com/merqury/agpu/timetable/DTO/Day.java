@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public abstract class Day {
+public class Day {
     List<Discipline> disciplines;
     String date;
 
@@ -19,7 +19,9 @@ public abstract class Day {
         return disciplines.isEmpty();
     }
 
-    public abstract Day proxy();
+    public Day proxy(){
+        return new Day();
+    }
 
 
 }

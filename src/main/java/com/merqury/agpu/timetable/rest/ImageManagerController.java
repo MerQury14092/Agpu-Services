@@ -1,5 +1,6 @@
 package com.merqury.agpu.timetable.rest;
 
+import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Discipline;
 import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.service.ImageService;
@@ -71,7 +72,7 @@ public class ImageManagerController {
 
     @PostMapping(value = "/6days", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] days(
-            @RequestBody GroupDay[] days,
+            @RequestBody Day[] days,
             HttpServletResponse response,
             HttpServletRequest request
     ) throws IOException {
@@ -80,7 +81,6 @@ public class ImageManagerController {
         else if(request.getParameter("vertical") != null && request.getParameter("horizontal") != null)
             response.sendError(400);
 
-        // TODO: realize vertical table
         if(request.getParameter("vertical") != null){
             BufferedImage res = service.getImageByTimetableOf6DaysVertical(days, 600, false);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
