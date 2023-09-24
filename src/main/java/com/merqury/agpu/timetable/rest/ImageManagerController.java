@@ -82,8 +82,10 @@ public class ImageManagerController {
 
         // TODO: realize vertical table
         if(request.getParameter("vertical") != null){
-            response.sendError(501);
-            return null;
+            BufferedImage res = service.getImageByTimetableOf6DaysVertical(days, 600, false);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(res, "PNG", baos);
+            return baos.toByteArray();
         }
 
         if(request.getParameter("vertical") == null) {

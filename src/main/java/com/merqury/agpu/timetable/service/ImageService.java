@@ -53,6 +53,28 @@ public class ImageService {
         return res;
     }
 
+    public BufferedImage getImageByTimetableOf6DaysVertical(Day[] days, int cellWidth, boolean full){
+        int max_pairs = countPairs(days[0]);
+        for(Day day: days)
+            if(countPairs(day) > max_pairs)
+                max_pairs = countPairs(day);
+        BufferedImage res = new BufferedImage(300+cellWidth*6, 150+200*(full?7:max_pairs), BufferedImage.TYPE_INT_BGR);
+        Graphics2D g = res.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, res.getWidth(), res.getHeight());
+        g.setColor(Color.BLACK);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        g.drawImage(headerForVertical(), 0, 0, null);
+        g.drawImage(headerForVertical(), res.getWidth()-150, 0, null);
+
+        for (int i = 0; i < 6; i++) {
+            g.drawImage(getImageByTimetableOfDayVertical(days[i], 600, true, full?7:max_pairs), 150+i*cellWidth, 0, null);
+        }
+
+        return res;
+    }
+
     /**
      * @param cellWidth - cell width
      * @return BufferedImage with size - {7*cellWidth+150; 150}
