@@ -173,30 +173,32 @@ public class TimetableController {
     public List<TeacherDay> getTimetableTeacher(
             @PathParam("") String startDate,
             @PathParam("") String endDate,
-            HttpServletRequest request
+            HttpServletRequest request,
+            HttpServletResponse response
     ) throws IOException {
         // (request.getParameter("id")==null?request.getParameter("teacherId"):request.getParameter("id"));
         if (startDate == null || endDate == null || (request.getParameter("teacherId") == null && request.getParameter("id") == null)) {
-            String startDateMessage = startDate;
-            String teacherIdMessage = request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id");
-            if (startDate == null)
-                startDateMessage = "Enter start date, please";
-            if (endDate == null)
-                startDateMessage = "Enter end date, please";
-            if (request.getParameter("teacherId") == null && request.getParameter("id") == null)
-                teacherIdMessage = "Enter teacher name, please";
-            return List.of(
-                    TeacherDay.builder()
-                            .date(startDateMessage)
-                            .teacherName(teacherIdMessage)
-                            .disciplines(List.of())
-                            .build()
-            );
+            if (startDate == null) {
+                Controllers.sendError(400, "Expected start date", response);
+                return null;
+            }
+            if (endDate == null) {
+                Controllers.sendError(400, "Expected end date", response);
+                return null;
+            }
+            if (request.getParameter("teacherId") == null && request.getParameter("id") == null) {
+                Controllers.sendError(400, "Expected teacherId|id", response);
+                return null;
+            }
         }
-        if (!Pattern.matches(dateRegex, startDate))
-            startDate = "Invalid date format";
-        if (!Pattern.matches(dateRegex, endDate))
-            endDate = "Invalid date format";
+        if (!Pattern.matches(dateRegex, startDate)) {
+            Controllers.sendError(400, "Invalid start date format", response);
+            return null;
+        }
+        if (!Pattern.matches(dateRegex, endDate)) {
+            Controllers.sendError(400, "Invalid end date format", response);
+            return null;
+        }
         boolean removeNull = (request.getParameter("removeEmptyDays") != null);
         List<TeacherDay> result = service.getDisciplinesTeacher(request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id"), startDate, endDate);
         result.forEach(TeacherDay::deleteHolidays);
@@ -204,14 +206,10 @@ public class TimetableController {
             result.removeIf(TeacherDay::isEmpty);
         if (result.isEmpty())
             return List.of();
-        if (result.get(0).getTeacherName().equals("None"))
-            return List.of(
-                    TeacherDay.builder()
-                            .date(startDate)
-                            .teacherName("Unknown teacher")
-                            .disciplines(List.of())
-                            .build()
-            );
+        if (result.get(0).getTeacherName() == null) {
+            Controllers.sendError(400, "Unknown teacher", response);
+            return null;
+        }
         return result;
     }
 
