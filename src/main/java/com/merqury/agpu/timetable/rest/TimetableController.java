@@ -141,37 +141,31 @@ public class TimetableController {
     @GetMapping("/teacher/day")
     public TeacherDay getTeacherTimetable(
             HttpServletRequest request,
+            HttpServletResponse response,
             @PathParam("") String date
     ) throws IOException {
         System.out.println("Request for: " + (request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id")));
         if (date == null || (request.getParameter("teacherId") == null && request.getParameter("id") == null)) {
-            if (date == null)
-                return TeacherDay.builder()
-                        .date("Enter date, please")
-                        .teacherName("...")
-                        .disciplines(List.of())
-                        .build();
-            return TeacherDay.builder()
-                    .date("...")
-                    .teacherName("Enter teacher name, please")
-                    .disciplines(List.of())
-                    .build();
+            if (date == null) {
+                Controllers.sendError(400, "Expected date", response);
+                return null;
+            }
+            Controllers.sendError(400, "Expected teacherId|id", response);
+            return null;
         }
-        if (!Pattern.matches(dateRegex, date))
-            date = "Invalid date format";
-        if (date.equals("Invalid date format"))
-            return TeacherDay.builder()
-                    .teacherName(request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id"))
-                    .date(date)
-                    .disciplines(List.of())
-                    .build();
+        if (!Pattern.matches(dateRegex, date)) {
+            Controllers.sendError(400, "Invalid date format", response);
+            return null;
+        }
         TeacherDay res = ((TeacherDay) service.getDisciplines(
                 request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id"),
                 date,
                 true
         )).deleteHolidays();
-        if (res.getTeacherName().equals("None"))
-            res.setTeacherName("Unknown teacher");
+        if (res.getTeacherName() == null) {
+            Controllers.sendError(400, "Unknown teacher", response);
+            return null;
+        }
         return res;
     }
 
