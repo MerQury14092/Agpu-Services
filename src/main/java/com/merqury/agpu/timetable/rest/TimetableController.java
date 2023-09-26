@@ -1,5 +1,6 @@
 package com.merqury.agpu.timetable.rest;
 
+import com.merqury.agpu.general.Controllers;
 import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.DTO.TeacherDay;
@@ -8,6 +9,7 @@ import com.merqury.agpu.timetable.service.GetGroupIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
 import com.merqury.agpu.timetable.service.GetWeeksService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.server.PathParam;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,44 +31,34 @@ public class TimetableController {
 
     @GetMapping("/day")
     public GroupDay getTimetable(HttpServletRequest request,
-                                 @PathParam("") String date
+                                 @PathParam("") String date,
+                                 HttpServletResponse response
     ) throws IOException {
         System.out.println("Request for: "+(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id")));
         if(date == null || (request.getParameter("groupId") == null && request.getParameter("id") == null)){
-            if(date == null)
-                return GroupDay.builder()
-                        .date("Enter date, please")
-                        .groupName("...")
-                        .disciplines(List.of())
-                        .build();
-            return GroupDay.builder()
-                    .date("...")
-                    .groupName("Enter group name, please")
-                    .disciplines(List.of())
-                    .build();
+            if(date == null) {
+                Controllers.sendError(400, "Expected date", response);
+                return null;
+            }
+            Controllers.sendError(400, "Expected groupId|id", response);
+            return null;
         }
         if(!Pattern.matches(dateRegex, date))
             date = "Invalid date format";
         String groupName = groupIdService.getFullGroupName(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"));
-        if(groupName.equals("None"))
-            return GroupDay.builder()
-                    .groupName("Unknown group")
-                    .date(date)
-                    .disciplines(List.of())
-                    .build();
-        if(!groupName.equals(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id")))
-            return GroupDay.builder()
-                    .date(date)
-                    .groupName("May be you mean \""+groupName+"\"?")
-                    .disciplines(List.of())
-                    .build();
+        if(groupName.equals("None")) {
+            Controllers.sendError(400, "Unknown group", response);
+            return null;
+        }
+        if(!groupName.equals(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"))) {
+            Controllers.sendError(400, "Unknown group", response);
+            return null;
+        }
 
-        if(date.equals("Invalid date format"))
-            return GroupDay.builder()
-                    .groupName(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"))
-                    .date(date)
-                    .disciplines(List.of())
-                    .build();
+        if(date.equals("Invalid date format")) {
+            Controllers.sendError(400, date, response);
+            return null;
+        }
 
         GroupDay res = ((GroupDay) service.getDisciplines(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"), date, false)).deleteHolidays();
         if(res.getGroupName() == null)
