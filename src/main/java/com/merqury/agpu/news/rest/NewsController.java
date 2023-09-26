@@ -22,7 +22,7 @@ public class NewsController {
     private final GetNewsService service;
 
     @GetMapping
-    public NewsResponse gatGeneralNews(HttpServletRequest request) throws IOException {
+    public NewsResponse getGeneralNews(HttpServletRequest request) throws IOException {
         int page = 1;
         if(request.getParameter("page") != null) {
             String pageStr = request.getParameter("page");
@@ -31,6 +31,11 @@ public class NewsController {
 
         }
         return service.getAgpuNews(page);
+    }
+
+    @GetMapping("/")
+    public NewsResponse getGeneralNewsDupl(HttpServletRequest request) throws IOException {
+        return getGeneralNews(request);
     }
 
     @GetMapping("/{faculty}")
@@ -47,6 +52,15 @@ public class NewsController {
 
         }
         return service.getArticlesByFaculty(faculty, page);
+    }
+
+    @GetMapping("/{faculty}/")
+    public NewsResponse getArticleByFacultyDupl(
+            @PathVariable String faculty,
+            HttpServletRequest request
+    )throws IOException
+    {
+        return getArticlesByFaculty(faculty, request);
     }
 
     @GetMapping("/{faculty}/{id}")

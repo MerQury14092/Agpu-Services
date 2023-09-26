@@ -4,6 +4,7 @@ import com.merqury.agpu.news.DTO.FullArticle;
 import com.merqury.agpu.news.DTO.NewsResponse;
 import com.merqury.agpu.news.DTO.PreviewArticle;
 import lombok.extern.log4j.Log4j2;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,11 +24,26 @@ import static com.merqury.agpu.general.AgpuConstants.hostSite;
 public class GetNewsService {
     private static final String urlForEverything = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?PAGEN_1=%d";
     private static final String urlForArticle = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?ELEMENT_ID=%d";
-    private final static String urlAgpuNews = "http://test.agpu.net/news.php";
+    private final static String urlAgpuNews = "http://agpu.net/news.php";
 
     public NewsResponse getArticlesByFaculty(String faculty, int page) throws IOException {
         List<PreviewArticle> res = new ArrayList<>();
-        Document doc = Jsoup.parse(new URL(String.format(urlForEverything, faculty, page)), 5000);
+        Document doc;
+        try {
+            doc = Jsoup.parse(new URL(String.format(urlForEverything, faculty, page)), 5000);
+        } catch (HttpStatusException e){
+            NewsResponse err = new NewsResponse();
+            err.setCurrentPage(0);
+            err.setCountPages(0);
+            PreviewArticle errArt = new PreviewArticle();
+            errArt.setDate("Unknown faculty: " + faculty);
+            errArt.setPreviewImage("Unknown faculty: " + faculty);
+            errArt.setDescription("Unknown faculty: " + faculty);
+            errArt.setTitle("Unknown faculty: " + faculty);
+            errArt.setId(-1);
+            err.setArticles(List.of(errArt));
+            return err;
+        }
         return getNewsResponse(page, doc, res);
     }
 
@@ -37,9 +53,21 @@ public class GetNewsService {
             doc = Jsoup.parse(new URL(urlAgpuNews + "?ELEMENT_ID=" + id), 5000);
         }
         else {
-            doc = Jsoup.parse(new URL(String.format(urlForArticle, faculty, id)), 5000);
+            try {
+                doc = Jsoup.parse(new URL(String.format(urlForArticle, faculty, id)), 5000);
+            } catch (HttpStatusException e){
+                FullArticle err = new FullArticle();
+                err.setTitle("Article not found");
+                return err;
+            }
         }
-        return parseArticlePage(Objects.requireNonNull(doc.getElementsByClass(/*"col-md-9 md-padding main-content"*/"mb-3").first()), id);
+        try {
+            return parseArticlePage(Objects.requireNonNull(doc.getElementsByClass(/*"col-md-9 md-padding main-content"*/"mb-3").first()), id);
+        } catch (Exception e){
+            FullArticle err = new FullArticle();
+            err.setTitle("Article not found");
+            return err;
+        }
     }
 
     public NewsResponse getAgpuNews(int page) throws IOException {
