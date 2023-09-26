@@ -1,5 +1,6 @@
 package com.merqury.agpu.timetable.rest;
 
+import com.merqury.agpu.general.Controllers;
 import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Discipline;
 import com.merqury.agpu.timetable.DTO.GroupDay;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.imageio.ImageIO;
-import javax.swing.text.DateFormatter;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
 
 @RestController
 @RequestMapping("/api/timetable/image")
@@ -69,10 +70,7 @@ public class ImageManagerController {
             HttpServletResponse response,
             HttpServletRequest request
     ) throws IOException {
-        if(request.getParameter("vertical") == null && request.getParameter("horizontal") == null)
-            response.sendError(400);
-        else if(request.getParameter("vertical") != null && request.getParameter("horizontal") != null)
-            response.sendError(400);
+        if (checkOrientation(response, request)) return null;
 
         Map<DisciplineType, String> types = extractMappingForDisciplineType(request);
         Map<DisciplineType, String> colors = extractMappingForDisciplineTypeColors(request);
@@ -97,13 +95,9 @@ public class ImageManagerController {
             HttpServletResponse response,
             HttpServletRequest request
     ) throws IOException {
-        if(request.getParameter("vertical") == null && request.getParameter("horizontal") == null)
-            response.sendError(400);
-        else if(request.getParameter("vertical") != null && request.getParameter("horizontal") != null)
-            response.sendError(400);
-
+        if (checkOrientation(response, request)) return null;
         if(days.length > 6 || days.length == 0){
-            response.sendError(400);
+            Controllers.sendError(416, "Expected array of [1; 6] days", response);
         }
         if(days.length < 6){
             Day[] oldDays = new Day[days.length];
@@ -139,6 +133,18 @@ public class ImageManagerController {
             return baos.toByteArray();
         }
         return null;
+    }
+
+    private boolean checkOrientation(HttpServletResponse response, HttpServletRequest request) throws IOException {
+        if(request.getParameter("vertical") == null && request.getParameter("horizontal") == null) {
+            Controllers.sendError(400, "Expected 'vertical' or 'horizontal' in query params", response);
+            return true;
+        }
+        else if(request.getParameter("vertical") != null && request.getParameter("horizontal") != null) {
+            Controllers.sendError(409, "Expected 'vertical' or 'horizontal' in query params", response);
+            return true;
+        }
+        return false;
     }
 
     private Map<DisciplineType, String> extractMappingForDisciplineType(HttpServletRequest request){
