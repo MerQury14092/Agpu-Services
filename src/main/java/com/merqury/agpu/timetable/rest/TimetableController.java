@@ -34,56 +34,63 @@ public class TimetableController {
                                  @PathParam("") String date,
                                  HttpServletResponse response
     ) throws IOException {
-        System.out.println("Request for: "+(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id")));
-        if(date == null || (request.getParameter("groupId") == null && request.getParameter("id") == null)){
-            if(date == null) {
+        System.out.println("Request for: " + (request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id")));
+        if (date == null || (request.getParameter("groupId") == null && request.getParameter("id") == null)) {
+            if (date == null) {
                 Controllers.sendError(400, "Expected date", response);
                 return null;
             }
             Controllers.sendError(400, "Expected groupId|id", response);
             return null;
         }
-        if(!Pattern.matches(dateRegex, date))
+        if (!Pattern.matches(dateRegex, date))
             date = "Invalid date format";
-        String groupName = groupIdService.getFullGroupName(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"));
-        if(groupName.equals("None")) {
+        String groupName = groupIdService.getFullGroupName(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"));
+        if (groupName.equals("None")) {
             Controllers.sendError(400, "Unknown group", response);
             return null;
         }
-        if(!groupName.equals(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"))) {
+        if (!groupName.equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"))) {
             Controllers.sendError(400, "Unknown group", response);
             return null;
         }
 
-        if(date.equals("Invalid date format")) {
+        if (date.equals("Invalid date format")) {
             Controllers.sendError(400, date, response);
             return null;
         }
 
-        GroupDay res = ((GroupDay) service.getDisciplines(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"), date, false)).deleteHolidays();
-        if(res.getGroupName() == null)
+        GroupDay res = ((GroupDay) service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), date, false)).deleteHolidays();
+        if (res.getGroupName() == null)
             res.setGroupName(groupName);
-        else if(res.getGroupName().equals("None"))
+        else if (res.getGroupName().equals("None"))
             res.setGroupName("Unknown group");
         return res;
     }
 
     @GetMapping("/days")
     public List<GroupDay> getTimetable(
-                                       @PathParam("") String startDate,
-                                       @PathParam("") String endDate,
-                                       HttpServletRequest request
+            @PathParam("") String startDate,
+            @PathParam("") String endDate,
+            HttpServletRequest request,
+            HttpServletResponse response
     ) throws IOException {
-        System.out.println("Request for: "+(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id")));
-        if(startDate == null || endDate == null || (request.getParameter("groupId") == null && request.getParameter("id") == null)){
+        System.out.println("Request for: " + (request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id")));
+        if (startDate == null || endDate == null || (request.getParameter("groupId") == null && request.getParameter("id") == null)) {
             String startDateMessage = startDate;
-            String groupIdMessage = request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id");
-            if(startDate == null)
-                startDateMessage = "Enter start date, please";
-            if(endDate == null)
-                startDateMessage = "Enter end date, please";
-            if(request.getParameter("groupId") == null && request.getParameter("id") == null)
-                groupIdMessage = "Enter group name, please";
+            String groupIdMessage = request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id");
+            if (startDate == null) {
+                Controllers.sendError(400, "Expected start date", response);
+                return null;
+            }
+            if (endDate == null) {
+                Controllers.sendError(400, "Expected end date", response);
+                return null;
+            }
+            if (request.getParameter("groupId") == null && request.getParameter("id") == null) {
+                Controllers.sendError(400, "Expected groupId|id", response);
+                return null;
+            }
             return List.of(
                     GroupDay.builder()
                             .date(startDateMessage)
@@ -92,40 +99,33 @@ public class TimetableController {
                             .build()
             );
         }
-        if(!Pattern.matches(dateRegex, startDate))
-            startDate = "Invalid date format";
-        if(!Pattern.matches(dateRegex, endDate))
-            endDate = "Invalid date format";
-        String groupName = groupIdService.getFullGroupName(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"));
-        if(groupName.equals("None"))
-            return List.of(GroupDay.builder()
-                    .groupName("Unknown group")
-                    .date(startDate)
-                    .disciplines(List.of())
-                    .build());
-        if(!groupName.equals(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id")))
-            return List.of(GroupDay.builder()
-                    .date(startDate)
-                    .groupName("May be you mean \""+groupName+"\"?")
-                    .disciplines(List.of())
-                    .build());
-
-        if(startDate.equals("Invalid date format") || endDate.equals("Invalid date format"))
-            return List.of(GroupDay.builder()
-                .groupName(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"))
-                .date("Invalid date format")
-                .disciplines(List.of())
-                .build());
+        if (!Pattern.matches(dateRegex, startDate)) {
+            Controllers.sendError(400, "Invalid date format (start date)", response);
+            return null;
+        }
+        if (!Pattern.matches(dateRegex, endDate)) {
+            Controllers.sendError(400, "Invalid date format (end date)", response);
+            return null;
+        }
+        String groupName = groupIdService.getFullGroupName(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"));
+        if (groupName.equals("None")) {
+            Controllers.sendError(400, "Unknown group", response);
+            return null;
+        }
+        if (!groupName.equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"))) {
+            Controllers.sendError(400, "Unknown group", response);
+            return null;
+        }
 
 
         boolean removeNull = (request.getParameter("removeEmptyDays") != null);
-        List<GroupDay> result = service.getDisciplines(request.getParameter("id")==null?request.getParameter("groupId"):request.getParameter("id"), startDate, endDate);
+        List<GroupDay> result = service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), startDate, endDate);
         result.forEach(GroupDay::deleteHolidays);
         if (removeNull)
             result.removeIf(GroupDay::isEmpty);
-        if(result.isEmpty())
+        if (result.isEmpty())
             return List.of();
-        if(result.get(0).getGroupName() == null)
+        if (result.get(0).getGroupName() == null)
             result.get(0).setGroupName(groupName);
         else if (result.get(0).getGroupName().equals("None"))
             return List.of();
@@ -134,7 +134,7 @@ public class TimetableController {
     }
 
     @GetMapping("/weeks")
-    public List<Week> getWeeks(){
+    public List<Week> getWeeks() {
         return weeksService.getEverything();
     }
 
@@ -143,9 +143,9 @@ public class TimetableController {
             HttpServletRequest request,
             @PathParam("") String date
     ) throws IOException {
-        System.out.println("Request for: "+(request.getParameter("id")==null?request.getParameter("teacherId"):request.getParameter("id")));
-        if(date == null || (request.getParameter("teacherId") == null && request.getParameter("id") == null)){
-            if(date == null)
+        System.out.println("Request for: " + (request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id")));
+        if (date == null || (request.getParameter("teacherId") == null && request.getParameter("id") == null)) {
+            if (date == null)
                 return TeacherDay.builder()
                         .date("Enter date, please")
                         .teacherName("...")
@@ -157,39 +157,39 @@ public class TimetableController {
                     .disciplines(List.of())
                     .build();
         }
-        if(!Pattern.matches(dateRegex, date))
+        if (!Pattern.matches(dateRegex, date))
             date = "Invalid date format";
-        if(date.equals("Invalid date format"))
+        if (date.equals("Invalid date format"))
             return TeacherDay.builder()
-                    .teacherName(request.getParameter("id")==null?request.getParameter("teacherId"):request.getParameter("id"))
+                    .teacherName(request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id"))
                     .date(date)
                     .disciplines(List.of())
                     .build();
         TeacherDay res = ((TeacherDay) service.getDisciplines(
-                request.getParameter("id")==null?request.getParameter("teacherId"):request.getParameter("id"),
+                request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id"),
                 date,
                 true
         )).deleteHolidays();
-        if(res.getTeacherName().equals("None"))
+        if (res.getTeacherName().equals("None"))
             res.setTeacherName("Unknown teacher");
         return res;
     }
 
     @GetMapping("/teacher/days")
     public List<TeacherDay> getTimetableTeacher(
-                                 @PathParam("") String startDate,
-                                 @PathParam("") String endDate,
-                                 HttpServletRequest request
+            @PathParam("") String startDate,
+            @PathParam("") String endDate,
+            HttpServletRequest request
     ) throws IOException {
         // (request.getParameter("id")==null?request.getParameter("teacherId"):request.getParameter("id"));
-        if(startDate == null || endDate == null || (request.getParameter("teacherId") == null && request.getParameter("id") == null)){
+        if (startDate == null || endDate == null || (request.getParameter("teacherId") == null && request.getParameter("id") == null)) {
             String startDateMessage = startDate;
-            String teacherIdMessage = request.getParameter("id")==null?request.getParameter("teacherId"):request.getParameter("id");
-            if(startDate == null)
+            String teacherIdMessage = request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id");
+            if (startDate == null)
                 startDateMessage = "Enter start date, please";
-            if(endDate == null)
+            if (endDate == null)
                 startDateMessage = "Enter end date, please";
-            if(request.getParameter("teacherId") == null && request.getParameter("id") == null)
+            if (request.getParameter("teacherId") == null && request.getParameter("id") == null)
                 teacherIdMessage = "Enter teacher name, please";
             return List.of(
                     TeacherDay.builder()
@@ -199,18 +199,18 @@ public class TimetableController {
                             .build()
             );
         }
-        if(!Pattern.matches(dateRegex, startDate))
+        if (!Pattern.matches(dateRegex, startDate))
             startDate = "Invalid date format";
-        if(!Pattern.matches(dateRegex, endDate))
+        if (!Pattern.matches(dateRegex, endDate))
             endDate = "Invalid date format";
         boolean removeNull = (request.getParameter("removeEmptyDays") != null);
-        List<TeacherDay> result = service.getDisciplinesTeacher(request.getParameter("id")==null?request.getParameter("teacherId"):request.getParameter("id"), startDate, endDate);
+        List<TeacherDay> result = service.getDisciplinesTeacher(request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id"), startDate, endDate);
         result.forEach(TeacherDay::deleteHolidays);
-        if(removeNull)
+        if (removeNull)
             result.removeIf(TeacherDay::isEmpty);
-        if(result.isEmpty())
+        if (result.isEmpty())
             return List.of();
-        if(result.get(0).getTeacherName().equals("None"))
+        if (result.get(0).getTeacherName().equals("None"))
             return List.of(
                     TeacherDay.builder()
                             .date(startDate)
@@ -222,7 +222,7 @@ public class TimetableController {
     }
 
     @GetMapping("/groups")
-    public List<Groups> groups(){
+    public List<Groups> groups() {
         return groupIdService.getAllGroups();
     }
 }
