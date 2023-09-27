@@ -5,8 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode
 @AllArgsConstructor
 public class Discipline {
     @JsonIgnore
@@ -17,7 +19,6 @@ public class Discipline {
     private String audienceId;
     private int subgroup;
     private DisciplineType type;
-    @JsonIgnore
     private String groupName;
     @JsonIgnore
     private int colspan;
