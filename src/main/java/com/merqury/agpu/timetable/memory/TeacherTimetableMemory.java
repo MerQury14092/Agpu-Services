@@ -23,7 +23,7 @@ public class TeacherTimetableMemory {
         Thread cleaner = new Thread(() -> {
             log.info("task fo remove added");
             try {
-                Thread.sleep(TimeUnit.HOURS.toMillis(4));
+                Thread.sleep(TimeUnit.HOURS.toMillis(3));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

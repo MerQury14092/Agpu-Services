@@ -3,7 +3,7 @@
 Выполнив GET запрос, вы получите массив
 [новостей](dto_models.md#модель-новости)
 
-URL: ***http://merqury.fun:8080/api/news***
+URL: ***http://merqury.fun/api/news***
 
 <hr>
 
@@ -16,7 +16,7 @@ URL: ***http://merqury.fun:8080/api/news***
 * `{faculty}` - название института\факультета (На английском)<br>Пример: `ipimif` - ИПИМиФ
 
 
-URL: ***http://merqury.fun:8080/api/news/{faculty}***
+URL: ***http://merqury.fun/api/news/{faculty}***
 
 <hr>
 
@@ -26,9 +26,9 @@ URL: ***http://merqury.fun:8080/api/news/{faculty}***
 [подробную новость](dto_models.md#модель-подробной-новости)
 
 Требуемые переменные в URL:
-* `{faculty}` - название института\факультета (На английском)<br>Пример: `ipimif` - ИПИМиФ<br>Что бы получить новость относящуюся к АГПУ, `{faculty}` должен быть равен `agpu`
+* `{faculty}` - название института/факультета (На английском)<br>Пример: `ipimif` - ИПИМиФ<br>Что бы получить новость относящуюся к АГПУ, `{faculty}` должен быть равен `agpu`
 * `{id}` - целое число, идентификатор новости 
 
-URL: ***http://merqury.fun:8080/api/news/{faculty}/{id}***
+URL: ***http://merqury.fun/api/news/{faculty}/{id}***
 
 <hr>
