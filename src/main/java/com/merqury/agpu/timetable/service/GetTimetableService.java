@@ -368,7 +368,7 @@ public class GetTimetableService {
         String[] prepodAndAudience = spans.get(1).text().split(",");
         if (prepodAndAudience.length >= 3) {
             result.setTeacherName(prepodAndAudience[0].trim());
-            result.setAudienceId(prepodAndAudience[2].trim());
+            result.setAudienceId(prepodAndAudience[prepodAndAudience.length-1].trim());
         } else if (prepodAndAudience.length == 2) {
             result.setTeacherName(prepodAndAudience[0].trim());
             result.setAudienceId(prepodAndAudience[1].trim());
