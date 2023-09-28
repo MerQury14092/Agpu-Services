@@ -478,8 +478,14 @@ public class ImageService {
         Graphics2D g = res.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g.drawImage(getImageByTimetableOfDiscipline(disc1, width/2, types, colors), 0, 0, null);
-        g.drawImage(getImageByTimetableOfDiscipline(disc2, width/2, types, colors), width/2, 0, null);
+        if(disc1.getSubgroup() == disc2.getSubgroup() || disc2.getSubgroup() > disc1.getSubgroup()){
+            g.drawImage(getImageByTimetableOfDiscipline(disc1, width / 2, types, colors), 0, 0, null);
+            g.drawImage(getImageByTimetableOfDiscipline(disc2, width / 2, types, colors), width / 2, 0, null);
+        }
+        else {
+            g.drawImage(getImageByTimetableOfDiscipline(disc1, width / 2, types, colors), width / 2, 0, null);
+            g.drawImage(getImageByTimetableOfDiscipline(disc2, width / 2, types, colors), 0, 0, null);
+        }
         g.setStroke(new BasicStroke(3));
         g.setColor(Color.BLACK);
         g.drawLine(width/2, 0, width/2, res.getHeight());
