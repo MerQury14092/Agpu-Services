@@ -50,7 +50,7 @@ public class TimetableController {
             Controllers.sendError(400, "Unknown group", response);
             return null;
         }
-        if (!groupName.equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"))) {
+        if (!groupName.trim().equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"))) {
             Controllers.sendError(400, "Unknown group", response);
             return null;
         }
@@ -112,7 +112,7 @@ public class TimetableController {
             Controllers.sendError(400, "Unknown group", response);
             return null;
         }
-        if (!groupName.equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"))) {
+        if (!groupName.trim().equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"))) {
             Controllers.sendError(400, "Unknown group", response);
             return null;
         }
