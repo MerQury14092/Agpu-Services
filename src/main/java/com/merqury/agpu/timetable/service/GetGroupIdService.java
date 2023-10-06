@@ -8,6 +8,8 @@ import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -20,30 +22,44 @@ import java.util.Scanner;
 public class GetGroupIdService {
     private final String url;
     private final ObjectMapper objectMapper;
+    private final String urlToMainPage;
     public GetGroupIdService(){
         this.objectMapper = new ObjectMapper();
         url = "http://www.it-institut.ru/SearchString/KeySearch?Id=118&SearchProductName=%s";
+        urlToMainPage = "http://www.it-institut.ru/SearchString/Index/118";
     }
     public int getId(String groupName){
 
-        Scanner sc = new Scanner(Objects.requireNonNull(this.getClass().getResourceAsStream("/static/groupids")));
-
-        StringBuilder builder = new StringBuilder();
-
-        while (sc.hasNextLine()){
-            builder.append(sc.nextLine()).append("\n");
+        SearchProduct[] result;
+        try {
+            result = objectMapper.readValue(
+                    new URL(url.formatted(URLEncoder.encode(groupName, StandardCharsets.UTF_8))),
+                    SearchProduct[].class
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        String line = searchLineWith(builder.toString(), groupName);
-
-        if(line.equals("N"))
-            return 0;
-
-        return Integer.parseInt(line.split("&")[1].split("=")[1]);
+        for(SearchProduct prod: result)
+            if(prod.Type.equals("Group"))
+                return prod.SearchId;
+        return 0;
     }
 
     public List<Groups> getAllGroups(){
-        Scanner sc = new Scanner(Objects.requireNonNull(this.getClass().getResourceAsStream("/static/groupids")));
+        HttpURLConnection connection;
+        try {
+            connection = (HttpURLConnection) new URL(urlToMainPage).openConnection();
+            connection.setRequestMethod("GET");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Scanner sc;
+        try {
+            sc = new Scanner(Objects.requireNonNull(connection.getInputStream()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         StringBuilder builder = new StringBuilder();
 
