@@ -9,4 +9,9 @@ public class AgpuTimetableApplication {
         SpringApplication.run(AgpuTimetableApplication.class, args);
     }
 
+    public static void async(Runnable task){
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
+    }
 }

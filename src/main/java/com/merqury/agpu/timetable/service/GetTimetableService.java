@@ -5,6 +5,7 @@ import com.merqury.agpu.timetable.DTO.Discipline;
 import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.DTO.TeacherDay;
 import com.merqury.agpu.timetable.enums.DisciplineType;
+import com.merqury.agpu.timetable.memory.GroupIdMemory;
 import com.merqury.agpu.timetable.memory.TeacherTimetableMemory;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
 import lombok.extern.log4j.Log4j2;
@@ -28,13 +29,13 @@ import java.util.Scanner;
 @Service
 @Log4j2
 public class GetTimetableService {
-    private final GetGroupIdService getGroupIdService;
+    private final GroupIdMemory groupIdMemory;
     private final TimetableMemory studentTimetableMemory;
     private final TeacherTimetableMemory teacherTimetableMemory;
     private final GetTeacherIdService getTeacherIdService;
 
-    public GetTimetableService(GetGroupIdService getGroupIdService, TimetableMemory memory, TeacherTimetableMemory teacherMemory, GetTeacherIdService getTeacherIdService) {
-        this.getGroupIdService = getGroupIdService;
+    public GetTimetableService(GroupIdMemory groupIdMemory, TimetableMemory memory, TeacherTimetableMemory teacherMemory, GetTeacherIdService getTeacherIdService) {
+        this.groupIdMemory = groupIdMemory;
         this.studentTimetableMemory = memory;
         this.teacherTimetableMemory = teacherMemory;
         this.getTeacherIdService = getTeacherIdService;
@@ -69,7 +70,7 @@ public class GetTimetableService {
         return parseHtml(String.format(
                         url,
                         ownerId,
-                        forTeacher?getTeacherIdService.getId(id):getGroupIdService.getId(id),
+                        forTeacher?getTeacherIdService.getId(id): groupIdMemory.getSearchId(id),
                         forTeacher?"Teacher":"Group",
                         weekId),
                 date,
