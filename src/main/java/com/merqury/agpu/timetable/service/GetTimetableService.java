@@ -47,7 +47,9 @@ public class GetTimetableService {
     public List<GroupDay> getDisciplines(String groupName, String startDate, String endDate) throws IOException {
         List<GroupDay> result = new ArrayList<>();
         for(String date: getDatesBetween(startDate, endDate)) {
-            result.add((GroupDay) getDisciplines(groupName, date, false));
+            GroupDay day = (GroupDay) getDisciplines(groupName, date, false, true);
+            day.setGroupName(groupName);
+            result.add(day);
         }
         return proxyList(result);
     }
@@ -55,12 +57,12 @@ public class GetTimetableService {
     public List<TeacherDay> getDisciplinesTeacher(String teacherName, String startDate, String endDate) throws IOException {
         List<TeacherDay> result = new ArrayList<>();
         for(String date: getDatesBetween(startDate, endDate)) {
-            result.add((TeacherDay) getDisciplines(teacherName, date, true));
+            result.add((TeacherDay) getDisciplines(teacherName, date, true, true));
         }
         return proxyListTeacher(result);
     }
 
-    public Day getDisciplines(String id, String date, boolean forTeacher) throws IOException {
+    public Day getDisciplines(String id, String date, boolean forTeacher, boolean useCache) throws IOException {
 
 
         int mappingWeekId = 3655;
@@ -75,7 +77,8 @@ public class GetTimetableService {
                         weekId),
                 date,
                 id,
-                forTeacher
+                forTeacher,
+                useCache
         ).proxy();
     }
 
@@ -127,7 +130,7 @@ public class GetTimetableService {
     }
 
 
-    private Day parseHtml(String url, String date, String id, boolean forTeacher) throws IOException {
+    private Day parseHtml(String url, String date, String id, boolean forTeacher, boolean useCache) throws IOException {
         String fio;
 
         if(forTeacher){
@@ -142,15 +145,24 @@ public class GetTimetableService {
             id = fio;
         }
 
-        Day day = forTeacher?teacherTimetableMemory.getDisciplineByDate(id, date):studentTimetableMemory.getDisciplineByDate(id, date);
-        List<Discipline> result = day.getDisciplines();
-        if(!result.isEmpty()) {
-            log.info("info: memory call");
-            return day;
+        List<Discipline> result;
+
+        if(useCache){
+            Day day = forTeacher?teacherTimetableMemory.getDisciplineByDate(id, date):studentTimetableMemory.getDisciplineByDate(id, date);
+            result = day.getDisciplines();
+            if(!result.isEmpty()) {
+                log.info("info: memory call");
+                if(day instanceof GroupDay groupDay){
+                    groupDay.setGroupName(id);
+                    return groupDay;
+                }
+                return day;
+            }
         }
+
         result = new ArrayList<>();
 
-        log.info("info: it-institut call on url: {}", url);
+//        log.info("info: it-institut call on url: {}", url);
         URL url1 = new URL(url);
 
         HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
@@ -199,12 +211,12 @@ public class GetTimetableService {
             if(tmpDate.equals(date))
                 continue;
             dataFilter(tmpArray, allDisciplines, tmpDate);
-            assignMissingDataAndCaching(id, tmpArray, col, tmpDate, forTeacher);
+            assignMissingData(id, tmpArray, col, tmpDate, forTeacher);
         }
 
         dataFilter(result, allDisciplines, date);
 
-        assignMissingDataAndCaching(id, result, col, date, forTeacher);
+        assignMissingData(id, result, col, date, forTeacher);
 
         String name;
         if(!result.isEmpty())
@@ -218,7 +230,7 @@ public class GetTimetableService {
         if(!forTeacher)
             return GroupDay.builder()
                     .date(date)
-                    .groupName(name)
+                    .groupName(id)
                     .disciplines(result)
                     .build();
         else
@@ -229,7 +241,7 @@ public class GetTimetableService {
                     .build();
     }
 
-    private void assignMissingDataAndCaching(String id, List<Discipline> result, Integer[] col, String date, boolean forTeacher) {
+    private void assignMissingData(String id, List<Discipline> result, Integer[] col, String date, boolean forTeacher) {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {

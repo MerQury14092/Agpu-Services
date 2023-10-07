@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@Log4j2
+//@Log4j2
 public class TimetableMemory {
     private final List<GroupDay> memory;
 
@@ -19,16 +19,16 @@ public class TimetableMemory {
     }
 
     public void addDiscipline(GroupDay groupDay){
-        log.info("added day: {}", groupDay);
+        //log.info("added day: {}", groupDay);
         memory.add(groupDay);
         Thread cleaner = new Thread(() -> {
-            log.info("task fo remove added");
+            //log.info("task fo remove added");
             try {
-                Thread.sleep(TimeUnit.HOURS.toMillis(3));
+                Thread.sleep(TimeUnit.HOURS.toMillis(2));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            log.info("object now removing {}", groupDay);
+            //log.info("object now removing {}", groupDay);
             memory.remove(groupDay);
         });
         cleaner.setDaemon(true);
@@ -36,8 +36,8 @@ public class TimetableMemory {
     }
 
     public GroupDay getDisciplineByDate(String groupName, String date){
-        log.info("trying get discipline by date {} and by name {}\nDisciplines in memory:", date, groupName);
-        memory.forEach(log::info);
+        //log.info("trying get discipline by date {} and by name {}\nDisciplines in memory:", date, groupName);
+        //memory.forEach(log::info);
 
         var res =  memory.stream()
                 .filter(groupGroupDay -> (groupGroupDay.getGroupName().equals(groupName) && groupGroupDay.getDate().equals(date)))
