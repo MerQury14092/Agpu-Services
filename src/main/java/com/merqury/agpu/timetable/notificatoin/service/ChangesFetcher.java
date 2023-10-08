@@ -27,13 +27,12 @@ public class ChangesFetcher {
     public ChangesFetcher(
             GetTimetableService getTimetableService,
             GetGroupIdService getGroupIdService,
-            TimetableMemory timetableMemory,
-            TimetableChangesPublisher timetableChangesPublisher
+            TimetableMemory timetableMemory
     ){
         this.getTimetableService = getTimetableService;
         this.getGroupIdService = getGroupIdService;
         this.timetableMemory = timetableMemory;
-        this.timetableChangesPublisher = timetableChangesPublisher;
+        this.timetableChangesPublisher = TimetableChangesPublisher.singleton();
         async(() ->  {
             try {
                 Thread.sleep(10000);

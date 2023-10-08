@@ -4,6 +4,7 @@ import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.notificatoin.Webhooks;
 import com.merqury.agpu.timetable.notificatoin.interfaces.Subscriber;
+import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class Webhook implements Subscriber {
     @Override
     public void handleNotification(String id, Day chagedDay) {
         if(id.equals(group))
-            Webhooks.sendData(url, (GroupDay) chagedDay);
+            if(!Webhooks.sendData(url, (GroupDay) chagedDay))
+                TimetableChangesPublisher.singleton().removeSubscriber(this);
     }
 }

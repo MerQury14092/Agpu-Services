@@ -2,17 +2,24 @@ package com.merqury.agpu.timetable.notificatoin.service;
 
 import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.notificatoin.interfaces.Subscriber;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
 public class TimetableChangesPublisher {
     private final List<Subscriber> subscribers;
+    private static final TimetableChangesPublisher singleton;
 
-    public TimetableChangesPublisher(){
+    static {
+        singleton = new TimetableChangesPublisher();
+    }
+
+    private TimetableChangesPublisher(){
         subscribers = new ArrayList<>();
+    }
+
+    public static TimetableChangesPublisher singleton(){
+        return singleton;
     }
 
     public void addSubscriber(Subscriber subscriber){

@@ -1,20 +1,26 @@
 package com.merqury.agpu.timetable.notificatoin.service;
 
 import com.merqury.agpu.timetable.notificatoin.DTO.Webhook;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
 public class WebhookRegistryService {
     private final TimetableChangesPublisher changesPublisher;
     private final List<Webhook> memory;
+    private static final WebhookRegistryService singleton;
 
+    static {
+        singleton = new WebhookRegistryService();
+    }
 
-    public WebhookRegistryService(TimetableChangesPublisher changesPublisher) {
+    public static WebhookRegistryService singleton(){
+        return singleton;
+    }
+
+    private WebhookRegistryService() {
         this.memory = new ArrayList<>();
-        this.changesPublisher = changesPublisher;
+        this.changesPublisher = TimetableChangesPublisher.singleton();
     }
 
     public int addWebhook(Webhook webhook){
