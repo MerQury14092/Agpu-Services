@@ -1,13 +1,13 @@
-package com.merqury.agpu.timetable.memory;
+package com.merqury.agpu.timetable.service;
 
 import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.interfaces.Subscriber;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Service
 public class TimetableChangesPublisher {
     private final List<Subscriber> subscribers;
 

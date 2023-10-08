@@ -2,7 +2,6 @@ package com.merqury.agpu.timetable.service;
 
 import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.DTO.Groups;
-import com.merqury.agpu.timetable.memory.TimetableChangesPublisher;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
@@ -78,7 +77,14 @@ public class ChangesFetcher {
         GroupDay todayFromSite = (GroupDay) getTimetableService.getDisciplines(groupName, getToday(), false, false);
         GroupDay tomorrowFromSite = (GroupDay) getTimetableService.getDisciplines(groupName, getTomorrow(), false, false);
         checkDayChanges(todayFromSite, todayFromMemory);
-        checkDayChanges(tomorrowFromSite, tomorrowFromMemory);
+        async(() -> {
+            try {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            checkDayChanges(tomorrowFromSite, tomorrowFromMemory);
+        });
     }
 
     private String getToday(){
@@ -92,8 +98,6 @@ public class ChangesFetcher {
     }
 
     private void checkDayChanges(GroupDay day, GroupDay dayFromMemory){
-        if(day.getGroupName().equals("ВМ-ИВТ-2-1"))
-            log.error("\nMEMORY: {}\nORIGINAL: {}", dayFromMemory, day);
         if(!dayFromMemory.equals(day)){
             timetableChangesPublisher.publishNotification(day.getGroupName(), day);
         }
