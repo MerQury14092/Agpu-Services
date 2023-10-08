@@ -33,14 +33,7 @@ public class ChangesFetcher {
         this.getGroupIdService = getGroupIdService;
         this.timetableMemory = timetableMemory;
         this.timetableChangesPublisher = TimetableChangesPublisher.singleton();
-        async(() ->  {
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            startDaemonForRegularTimetableFetching();
-        });
+        startDaemonForRegularTimetableFetching();
     }
 
     private void startDaemonForRegularTimetableFetching(){

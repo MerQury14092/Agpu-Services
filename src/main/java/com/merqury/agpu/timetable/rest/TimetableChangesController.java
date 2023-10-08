@@ -10,6 +10,7 @@ import com.merqury.agpu.timetable.notificatoin.interfaces.TemporarySubscriber;
 import com.merqury.agpu.timetable.notificatoin.service.WebhookRegistryService;
 import com.merqury.agpu.timetable.service.GetGroupIdService;
 import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.server.PathParam;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -70,7 +71,23 @@ public class TimetableChangesController {
             changesPublisher.removeSubscriber(subscriber);
             return null;
         }
+        changesPublisher.removeSubscriber(subscriber);
         return res.deleteHolidays();
+    }
+
+    @PostMapping("/push")
+    public String pushNotification(HttpServletRequest request, HttpServletResponse response, @RequestBody GroupDay day) throws IOException {
+        String authToken = request.getHeader("Authorization");
+        if(authToken == null) {
+            Controllers.sendError(403, "Forbidden", response);
+            return null;
+        }
+        if(!authToken.equals("Petrakov14092")) {
+            Controllers.sendError(403, "Forbidden", response);
+            return null;
+        }
+        changesPublisher.publishNotification(day.getGroupName(), day);
+        return "OK";
     }
 
     @GetMapping("/day/check")

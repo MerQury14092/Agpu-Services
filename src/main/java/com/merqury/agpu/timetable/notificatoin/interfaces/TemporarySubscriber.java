@@ -10,7 +10,7 @@ import static com.merqury.agpu.AgpuTimetableApplication.*;
 
 public class TemporarySubscriber implements Subscriber {
     private volatile GroupDay day;
-    private int seconds;
+    private final int seconds;
     private final String expectedGroupName;
 
     public TemporarySubscriber(int seconds, String expectedGroupName) {
