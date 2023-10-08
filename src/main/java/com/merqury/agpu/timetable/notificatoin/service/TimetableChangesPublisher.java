@@ -1,7 +1,7 @@
-package com.merqury.agpu.timetable.service;
+package com.merqury.agpu.timetable.notificatoin.service;
 
 import com.merqury.agpu.timetable.DTO.Day;
-import com.merqury.agpu.timetable.interfaces.Subscriber;
+import com.merqury.agpu.timetable.notificatoin.interfaces.Subscriber;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

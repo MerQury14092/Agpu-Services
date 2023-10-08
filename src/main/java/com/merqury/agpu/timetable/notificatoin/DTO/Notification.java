@@ -1,4 +1,4 @@
-package com.merqury.agpu.timetable.DTO;
+package com.merqury.agpu.timetable.notificatoin.DTO;
 
 import lombok.Data;
 

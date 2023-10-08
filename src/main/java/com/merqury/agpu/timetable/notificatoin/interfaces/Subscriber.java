@@ -1,4 +1,4 @@
-package com.merqury.agpu.timetable.interfaces;
+package com.merqury.agpu.timetable.notificatoin.interfaces;
 
 import com.merqury.agpu.timetable.DTO.Day;
 

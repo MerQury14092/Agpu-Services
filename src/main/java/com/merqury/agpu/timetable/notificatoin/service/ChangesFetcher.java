@@ -1,8 +1,11 @@
-package com.merqury.agpu.timetable.service;
+package com.merqury.agpu.timetable.notificatoin.service;
 
 import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
+import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher;
+import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetTimetableService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
@@ -79,7 +82,7 @@ public class ChangesFetcher {
         checkDayChanges(todayFromSite, todayFromMemory);
         async(() -> {
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+                Thread.sleep(TimeUnit.SECONDS.toMillis(15));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

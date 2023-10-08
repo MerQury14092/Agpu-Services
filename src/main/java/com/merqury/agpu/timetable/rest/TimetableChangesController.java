@@ -1,36 +1,36 @@
 package com.merqury.agpu.timetable.rest;
 
-import com.merqury.agpu.AgpuTimetableApplication;
 import com.merqury.agpu.general.Controllers;
-import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.GroupDay;
 import com.merqury.agpu.timetable.DTO.Groups;
-import com.merqury.agpu.timetable.DTO.Notification;
-import com.merqury.agpu.timetable.implementations.TemporarySubscriber;
-import com.merqury.agpu.timetable.interfaces.Subscriber;
+import com.merqury.agpu.timetable.notificatoin.DTO.Notification;
+import com.merqury.agpu.timetable.notificatoin.DTO.Webhook;
+import com.merqury.agpu.timetable.notificatoin.interfaces.TemporarySubscriber;
+import com.merqury.agpu.timetable.notificatoin.service.WebhookRegistryService;
 import com.merqury.agpu.timetable.service.GetGroupIdService;
-import com.merqury.agpu.timetable.service.TimetableChangesPublisher;
+import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.server.PathParam;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.http.MediaType;
+import org.springframework.util.MimeType;
+import org.springframework.web.bind.annotation.*;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import static com.merqury.agpu.AgpuTimetableApplication.*;
 
 @RestController
 @RequestMapping("/api/timetable/changes")
 public class TimetableChangesController {
     private final GetGroupIdService getGroupIdService;
     private final TimetableChangesPublisher changesPublisher;
+    private final WebhookRegistryService webhookRegistryService;
 
-    public TimetableChangesController(GetGroupIdService getGroupIdService, TimetableChangesPublisher changesPublisher) {
+    public TimetableChangesController(GetGroupIdService getGroupIdService, TimetableChangesPublisher changesPublisher, WebhookRegistryService webhookRegistryService) {
         this.getGroupIdService = getGroupIdService;
         this.changesPublisher = changesPublisher;
+        this.webhookRegistryService = webhookRegistryService;
     }
 
 
@@ -83,6 +83,20 @@ public class TimetableChangesController {
         if(day == null)
             return Notification.noChanges("N/A");
         return Notification.thereAreChanges(day.getDate());
+    }
+
+    @PostMapping(value = "webhook/register", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String registerWebhook(@RequestBody Webhook webhook, HttpServletResponse response) throws IOException {
+        int result = webhookRegistryService.addWebhook(webhook);
+        if (result == 0)
+            return """
+                    {
+                        "status": "OK"
+                    }
+                    """;
+
+        Controllers.sendError(400, "webhook already registered", response);
+        return null;
     }
 
 }
