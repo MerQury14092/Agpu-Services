@@ -1,0 +1,315 @@
+openapi: 3.0.3
+
+info:
+  title: АГПУ Сервисы
+  description: АГПУ Сервисы
+  version: "3.21"
+
+servers:
+  - url: 'http://merqury.fun'
+    description: Продакшн сервер
+  - url: 'http://merqury.fun:8080'
+    description: Тест сервер
+
+paths:
+  /api/news:
+    get:
+      description: Запрос для получения новостей института
+      tags:
+        - Новости
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/news-page'
+
+  /api/news/{faculty}:
+    get:
+      description: Получение новостей для определенного факультета/института
+      tags:
+        - Новости
+
+      parameters:
+        - name: faculty
+          in: path
+          required: true
+          description: Название факультета на английском
+          schema:
+            type: string
+            example: fdino
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/news-page'
+
+  /api/news/{faculty}/{id}:
+    get:
+      description: Получение определенной новости
+      tags:
+        - Новости
+
+      parameters:
+        - name: faculty
+          in: path
+          required: true
+          description: Название факультета на английском (agpu - для новости университета)
+          schema:
+            type: string
+            example: ipimif
+        - name: id
+          in: path
+          required: true
+          description: Номер страницы
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/news-full-model'
+
+  /api/timetable/day:
+    get:
+      description: Получить расписание на день
+      tags:
+        - Расписание
+
+      parameters:
+        - name: id
+          description: Имя группы на русском, так, как оно на сайте it-institut
+          required: true
+          in: query
+          schema:
+            type: string
+            example: ВМ-ИВТ-2-1
+        - name: date
+          description: Дата в формате dd.MM.yyyy, на которую получить расписание
+          required: true
+          in: query
+          schema:
+            type: string
+            example: 09.09.2023
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/timetable-day'
+
+  /api/timetable/days:
+    get:
+      description: Получение расписания на несколько дней
+      tags:
+        - Расписание
+
+      parameters:
+        - name: id
+          description: Имя группы на русском, так, как оно на сайте it-institut
+          required: true
+          in: query
+          schema:
+            type: string
+            example: ВМ-ИВТ-2-1
+        - name: startDate
+          description: Дата в формате dd.MM.yyyy, с которой начать диапазон
+          required: true
+          in: query
+          schema:
+            type: string
+            example: 09.09.2023
+        - name: endDate
+          description: Дата в формате dd.MM.yyyy, по которую закончить диапазон
+          required: true
+          in: query
+          schema:
+            type: string
+            example: 10.09.2023
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/timetable-day'
+
+  /api/timetable/groups:
+    get:
+      description: Получение всех групп, разбитых по факультетам
+      tags:
+        - Группы
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groups-model'
+
+  /api/timetable/weeks:
+    get:
+      description: Получение всех недель учебного года
+      tags:
+        - Недели
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/week-model'
+
+
+
+components:
+  schemas:
+    timetable-discipline:
+      description: Модель дисциплины
+      properties:
+        time:
+          type: string
+          description: Время дисциплины (формат hh:mm-hh:mm)
+          example: 9:40-11:10
+        name:
+          type: string
+          description: Имя дисциплины
+          example: Программирование
+        teacherName:
+          type: string
+          description: Наименование преподавателя
+          example: Бельченко В. Е.
+        groupName:
+          type: string
+          description: Наименование группы
+          example: ВМ-ИВТ-2-1
+        audienceId:
+          type: string
+          description: Аудитория, где будет дисциплина
+          example: 23а
+        subgroup:
+          type: integer
+          description: Для какой подгруппы дисциплина, по умолчанию - 0
+          example: 0
+
+    groups-model:
+      description: Модель групп института/факультета
+      properties:
+        facultyName:
+          type: string
+          description: Наименование института/факультета
+          example: Институт прикладной информатики, математики и физики (очная форма обучения)
+        groups:
+          type: array
+          description: Массив наименований всех групп института/факультета
+          items:
+            type: string
+            example: ВМ-ИВТ-2-1
+
+    week-model:
+      description: Модель недели
+      properties:
+        id:
+          type: integer
+          description: Идентификатор недели, как на сайте it-institut
+          example: 7
+        from:
+          type: string
+          description: Начало недели (формат dd.MM.yyyy)
+          example: 09.10.2023
+        to:
+          type: string
+          description: Конец недели (формат d.MM.yyyy)
+          example: 15.10.2023
+        dayNames:
+          type: object
+          additionalProperties:
+            type: string
+            description: Имя свойства - дата в формате dd.MM.yyyy, значение - это соответствующий день недели
+          example:
+            09.10.2023: Понедельник
+            10.10.2023: Вторник
+            11.10.2023: Среда
+            12.10.2023: Четверг
+            13.10.2023: Пятница
+            14.10.2023: Суббота
+            15.10.2023: Воскресенье
+
+    timetable-day:
+      description: Модель расписания на день
+      properties:
+        id:
+          type: string
+          description: На кого нацеленно расписание (группа или наименование преподавателя)
+          example: ВМ-ИВТ-2-1
+        date:
+          type: string
+          description: Для какой даты актуален данный день (формат dd.MM.yyyy)
+          example: 09.09.2023
+        disciplines:
+          type: array
+          description: Массив дисциплин
+          items:
+            $ref: '#/components/schemas/timetable-discipline'
+
+
+    news-page:
+      description: Модель, содержащая страницу новостей
+      properties:
+        currentPage:
+          type: integer
+          description: Текущая страница
+        countPages:
+          type: integer
+          description: Всего страниц
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/news-preview-model'
+
+    news-preview-model:
+      description: Модель с кратким обзором новости
+      properties:
+        id:
+          type: integer
+          description: Идентификатор новости
+        title:
+          type: string
+          description: Заголовок новости
+        date:
+          type: string
+          description: Дата публикации в формате dd.MM.yyyy
+        previewImage:
+          type: string
+          description: URL до картинки
+    news-full-model:
+      description: Модель с полным описанием новости
+      properties:
+        id:
+          type: integer
+          description: Идентификатор новости
+        title:
+          type: string
+          description: Заголовок новости
+        date:
+          type: string
+          description: Дата публикации в формате dd.MM.yyyy
+        images:
+          type: array
+          description: Массив URL до картинок, связанных с новостью
+
