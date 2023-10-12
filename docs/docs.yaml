@@ -12,7 +12,7 @@ servers:
     description: Тест сервер
 
 paths:
-  /api/news:
+  /api/v1.0/news:
     get:
       description: Запрос для получения новостей института
       tags:
@@ -26,7 +26,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/news-page'
 
-  /api/news/{faculty}:
+  /api/v1.0/news/{faculty}:
     get:
       description: Получение новостей для определенного факультета/института
       tags:
@@ -49,7 +49,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/news-page'
 
-  /api/news/{faculty}/{id}:
+  /api/v1.0/news/{faculty}/{id}:
     get:
       description: Получение определенной новости
       tags:
@@ -78,7 +78,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/news-full-model'
 
-  /api/timetable/day:
+  /api/v1.0/timetable/day:
     get:
       description: Получить расписание на день
       tags:
@@ -93,11 +93,12 @@ paths:
             type: string
             example: ВМ-ИВТ-2-1
         - name: date
-          description: Дата в формате dd.MM.yyyy, на которую получить расписание
+          description: Дата, на которую получить расписание
           required: true
           in: query
           schema:
             type: string
+            format: dd.MM.yyyy
             example: 09.09.2023
 
       responses:
@@ -108,7 +109,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/timetable-day'
 
-  /api/timetable/days:
+  /api/v1.0/timetable/days:
     get:
       description: Получение расписания на несколько дней
       tags:
@@ -123,18 +124,20 @@ paths:
             type: string
             example: ВМ-ИВТ-2-1
         - name: startDate
-          description: Дата в формате dd.MM.yyyy, с которой начать диапазон
+          description: Дата, с которой начать диапазон
           required: true
           in: query
           schema:
             type: string
+            format: dd.MM.yyyy
             example: 09.09.2023
         - name: endDate
-          description: Дата в формате dd.MM.yyyy, по которую закончить диапазон
+          description: Дата, по которую закончить диапазон
           required: true
           in: query
           schema:
             type: string
+            format: dd.MM.yyyy
             example: 10.09.2023
 
       responses:
@@ -147,7 +150,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/timetable-day'
 
-  /api/timetable/groups:
+  /api/v1.0/timetable/groups:
     get:
       description: Получение всех групп, разбитых по факультетам
       tags:
@@ -161,7 +164,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/groups-model'
 
-  /api/timetable/weeks:
+  /api/v1.0/timetable/weeks:
     get:
       description: Получение всех недель учебного года
       tags:
@@ -175,9 +178,155 @@ paths:
               schema:
                 $ref: '#/components/schemas/week-model'
 
+  /api/v1.0/timetable/image/discipline:
+    post:
+      description: Получить изображение одной дисциплины
+      tags:
+        - Изображения
+
+      parameters:
+        - $ref: '#/components/parameters/cell-colors'
+        - $ref: '#/components/parameters/cell-type-names'
+
+      requestBody:
+        required: true
+        description: Дисциплина, которую нужно преобразовать в изображение
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/timetable-discipline'
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            image/png: { }
+
+  /api/v1.0/timetable/image/day:
+    post:
+      description: Получить картинку для расписания на день
+      tags:
+        - Изображения
+
+      parameters:
+        - name: orientation
+          description: Ориентация изображения
+          required: true
+          in: query
+          schema:
+            type: string
+            enum:
+              - vertical
+              - horizontal
+
+      requestBody:
+        required: true
+        description: Расписание на день, которое нужно преобразовать в изображение
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/timetable-day'
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            image/png: {}
+
+  /api/v1.0/timetable/image/6days:
+    post:
+      description: Получить изображение для расписания на 6 дней
+      tags:
+        - Изображения
+
+      parameters:
+        - name: orientation
+          description: Ориентация изображения
+          required: true
+          in: query
+          schema:
+            type: string
+            enum:
+              - vertical
+              - horizontal
+
+      requestBody:
+        required: true
+        description: Массив из 6 дней расписания, который нужно преобразовать в изображение
+        content:
+          application/json:
+            schema:
+              type: array
+              maxLength: 6
+              minLength: 1
+              items:
+                $ref: '#/components/schemas/timetable-day'
+
+      responses:
+        200:
+          description: Успешный ответ
+          content:
+            image/png: { }
+
 
 
 components:
+  parameters:
+    cell-width:
+      name: cell_width
+      description: Ширина ячейки
+      in: query
+      schema:
+        type: integer
+        example: 800
+
+    cell-height:
+      name: cell_height
+      description: Ширина ячейки
+      in: query
+      schema:
+        type: integer
+        example: 150
+
+    cell-colors:
+      name: cell_colors
+      description: Цвета ячеек разных типов расписания
+      in: query
+      schema:
+        format: rgb
+        type: object
+        additionalProperties:
+          type: string
+        example:
+          lec: #ffffff.
+          prac: #ffffff.
+          exam: #ffffff.
+          lab: #ffffff.
+          hol: #ffffff.
+          cred: #ffffff.
+          cons: #ffffff.
+          fepo: #ffffff.
+          none: #ffffff.
+
+    cell-type-names:
+      name: type_names
+      description: Названия типов дисциплин
+      in: query
+      schema:
+        type: object
+        additionalProperties:
+          title: string
+        example:
+          lec: Лекция.
+          prac: Практика.
+          exam: Экзамен.
+          lab: Лабораторная.
+          hol: Праздник.
+          cred: Зачёт.
+          cons: Консультация.
+          fepo: ФЭПО.
+          none: Неизвестно.
+
   schemas:
     timetable-discipline:
       description: Модель дисциплины
@@ -206,6 +355,28 @@ components:
           type: integer
           description: Для какой подгруппы дисциплина, по умолчанию - 0
           example: 0
+        type:
+          type: string
+          description:
+            lec - Лекция.
+            prac - Практика.
+            exam - Экзамен.
+            lab - Лабораторная.
+            hol - Праздник.
+            cred - Зачёт.
+            cons - Консультация.
+            fepo - ФЭПО.
+            none - Неизвестно.
+          enum:
+            - lec
+            - prac
+            - exam
+            - lab
+            - hol
+            - cred
+            - cons
+            - fepo
+            - none
 
     groups-model:
       description: Модель групп института/факультета
@@ -297,6 +468,7 @@ components:
         previewImage:
           type: string
           description: URL до картинки
+
     news-full-model:
       description: Модель с полным описанием новости
       properties:
@@ -312,4 +484,3 @@ components:
         images:
           type: array
           description: Массив URL до картинок, связанных с новостью
-
