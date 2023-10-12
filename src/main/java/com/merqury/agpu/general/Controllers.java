@@ -11,7 +11,7 @@ public class Controllers {
     public static void sendError(int status, String message, HttpServletResponse response) throws IOException {
         log.error("Error response with {} code. Message: {}", status, message);
         response.setCharacterEncoding("UTF-8");
-        response.setStatus(400);
+        response.setStatus(status);
         response.setHeader("Content-Type", "application/json");
         response.getOutputStream().print("{\"status\":%s,\"error\":\"%s\"}".formatted(status, message));
         response.getOutputStream().flush();

@@ -60,7 +60,7 @@ public class TimetableController {
             return null;
         }
 
-        GroupDay res = ((GroupDay) service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), date, false)).deleteHolidays();
+        GroupDay res = ((GroupDay) service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), date, false, true)).deleteHolidays();
         if (res.getGroupName() == null)
             res.setGroupName(groupName);
         else if (res.getGroupName().equals("None"))
@@ -160,6 +160,7 @@ public class TimetableController {
         TeacherDay res = ((TeacherDay) service.getDisciplines(
                 request.getParameter("id") == null ? request.getParameter("teacherId") : request.getParameter("id"),
                 date,
+                true,
                 true
         )).deleteHolidays();
         if (res.getTeacherName() == null) {
