@@ -29,35 +29,34 @@ public class GetSearchIdService {
     }
 
     public int getGroupId(String groupName){
-        SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, groupName);
+        return getSearchId(groupName, "Group");
+    }
+
+    public int getTeacherId(String teacherName){
+        return getSearchId(teacherName, "Teacher");
+    }
+
+    private int getSearchId(String searchText, String expectedType){
+        SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, searchText);
         return Arrays.stream(result)
-                .filter(element -> Objects.equals(element.Type, "Group"))
+                .filter(element -> Objects.equals(element.Type, expectedType))
                 .map(element -> element.SearchId)
                 .findFirst()
                 .orElse(0);
     }
 
-    public int getTeacherId(String teacherName){
-        SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, teacherName);
-        if(result.length == 0)
-            return 1386;
-        else
-            return result[0].SearchId;
-    }
-
     public String getTeacherFullName(String teacherName){
-        SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, teacherName);
-        return Arrays.stream(result)
-                .filter(element -> Objects.equals(element.Type, "Teacher"))
-                .map(element -> element.SearchContent)
-                .findFirst()
-                .orElse("None");
+        return getSearchContent(teacherName, "Teacher");
     }
 
     public String getFullGroupName(String groupName){
-        SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, groupName);
+        return getSearchContent(groupName, "Group");
+    }
+
+    private String getSearchContent(String searchText, String expectedType){
+        SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, searchText);
         return Arrays.stream(result)
-                .filter(element -> Objects.equals(element.Type, "Group"))
+                .filter(element -> Objects.equals(element.Type, expectedType))
                 .map(element -> element.SearchContent)
                 .findFirst()
                 .orElse("None");
@@ -78,7 +77,7 @@ public class GetSearchIdService {
         );
     }
 
-    public List<Groups> getAllGroups(){
+    public List<Groups> getAllGroupsFromMainPage(){
         String dataFromMainPage = getDataFromUrl(urlToMainPage);
         List<Groups> result = new ArrayList<>();
         Document document = Jsoup.parse(dataFromMainPage);
@@ -88,7 +87,7 @@ public class GetSearchIdService {
     }
 
     private String getDataFromUrl(String url){
-        InputStream inputStream = getStreamByUrl(url);
+        InputStream inputStream = tryToOpenStreamOnUrl(url);
         return readStringFromInputStream(inputStream);
     }
 
@@ -101,29 +100,29 @@ public class GetSearchIdService {
         return builder.toString();
     }
 
-    private InputStream getStreamByUrl(String url){
+    private InputStream tryToOpenStreamOnUrl(String url){
         try {
-            return tryToOpenStreamOnUrl(url);
+            return openStreamOnUrl(url);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private InputStream tryToOpenStreamOnUrl(String url) throws IOException {
+    private InputStream openStreamOnUrl(String url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setRequestMethod("GET");
         return connection.getInputStream();
     }
 
-    private Groups parseCardElement(Element el){
-        Groups res = new Groups();
-        res.setFacultyName(
-                el.getElementsByTag("button").first().text()
+    private Groups parseCardElement(Element cardElement){
+        Groups result = new Groups();
+        result.setFacultyName(
+                cardElement.getElementsByTag("button").first().text()
         );
 
-        el.getElementsByClass("p-2")
-                .forEach(element -> res.getGroups().add(getGroupNameFromP2Element(element)));
-        return res;
+        cardElement.getElementsByClass("p-2")
+                .forEach(element -> result.getGroups().add(getGroupNameFromP2Element(element)));
+        return result;
     }
 
     private String getGroupNameFromP2Element(Element element){

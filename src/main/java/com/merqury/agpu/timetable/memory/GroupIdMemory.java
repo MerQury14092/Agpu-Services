@@ -53,7 +53,7 @@ public class GroupIdMemory {
     }
 
     private void fetchDataFromService(){
-        for(Groups faculty: groupSearchIdService.getAllGroups())
+        for(Groups faculty: groupSearchIdService.getAllGroupsFromMainPage())
             fetchGroupsFromFaculty(faculty);
     }
 

@@ -50,7 +50,7 @@ public class TimetableChangesController {
         }
         boolean contains = false;
         Super:
-        for(Groups faculty: getSearchIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroupsFromMainPage())
             for (String group: faculty.getGroups())
                 if(group.equals(groupId)){
                     contains = true;
@@ -104,7 +104,7 @@ public class TimetableChangesController {
     public String registerWebhook(@RequestBody Webhook webhook, HttpServletResponse response) throws IOException {
         boolean contains = false;
         Super:
-        for(Groups faculty: getSearchIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroupsFromMainPage())
             for (String group: faculty.getGroups())
                 if(group.equals(webhook.getGroup())){
                     contains = true;

@@ -57,7 +57,7 @@ public class ChangesFetcher {
     private void fetchTimetable() throws IOException {
         log.info("Start fetching timetable");
         long timestampOfStartFetching = System.currentTimeMillis();
-        for(Groups faculty: getSearchIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroupsFromMainPage())
             fetchTimetableForFaculty(faculty);
         log.info("Fetching of timetable changes complete on {} ms", System.currentTimeMillis() - timestampOfStartFetching);
     }

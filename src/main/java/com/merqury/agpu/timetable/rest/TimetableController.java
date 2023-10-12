@@ -139,6 +139,6 @@ public class TimetableController {
 
     @GetMapping("/groups")
     public List<Groups> groups() {
-        return groupIdService.getAllGroups();
+        return groupIdService.getAllGroupsFromMainPage();
     }
 }
