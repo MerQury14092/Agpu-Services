@@ -28,12 +28,12 @@ import java.util.Scanner;
 public class GetTimetableService {
     private final GroupIdMemory groupIdMemory;
     private final TimetableMemory studentTimetableMemory;
-    private final GetTeacherIdService getTeacherIdService;
+    private final GetSearchIdService getSearchIdService;
 
-    public GetTimetableService(GroupIdMemory groupIdMemory, TimetableMemory memory, GetTeacherIdService getTeacherIdService) {
+    public GetTimetableService(GroupIdMemory groupIdMemory, TimetableMemory memory, GetSearchIdService getSearchIdService) {
         this.groupIdMemory = groupIdMemory;
         this.studentTimetableMemory = memory;
-        this.getTeacherIdService = getTeacherIdService;
+        this.getSearchIdService = getSearchIdService;
     }
 
     private static final int ownerId = 118;
@@ -59,7 +59,7 @@ public class GetTimetableService {
         return parseHtml(String.format(
                         url,
                         ownerId,
-                        forTeacher?getTeacherIdService.getId(id): groupIdMemory.getSearchId(id),
+                        forTeacher?getSearchIdService.getTeacherId(id): groupIdMemory.getSearchId(id),
                         forTeacher?"Teacher":"Group",
                         weekId),
                 date,
@@ -121,7 +121,7 @@ public class GetTimetableService {
         String fio;
 
         if(forTeacher){
-            fio = getTeacherIdService.getFIO(id).split(",")[0];
+            fio = getSearchIdService.getTeacherFullName(id).split(",")[0];
 
             if(fio.equals("None"))
                 return TimetableDay.builder()

@@ -3,7 +3,7 @@ package com.merqury.agpu.timetable.notificatoin.service;
 import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
-import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetSearchIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,18 +20,18 @@ import static com.merqury.agpu.AgpuTimetableApplication.*;
 @Log4j2
 public class ChangesFetcher {
     private final GetTimetableService getTimetableService;
-    private final GetGroupIdService getGroupIdService;
+    private final GetSearchIdService getSearchIdService;
     private final TimetableMemory timetableMemory;
     private final TimetableChangesPublisher timetableChangesPublisher;
 
     @Autowired
     public ChangesFetcher(
             GetTimetableService getTimetableService,
-            GetGroupIdService getGroupIdService,
+            GetSearchIdService getSearchIdService,
             TimetableMemory timetableMemory
     ){
         this.getTimetableService = getTimetableService;
-        this.getGroupIdService = getGroupIdService;
+        this.getSearchIdService = getSearchIdService;
         this.timetableMemory = timetableMemory;
         this.timetableChangesPublisher = TimetableChangesPublisher.singleton();
         startDaemonForRegularTimetableFetching();
@@ -57,7 +57,7 @@ public class ChangesFetcher {
     private void fetchTimetable() throws IOException {
         log.info("Start fetching timetable");
         long timestampOfStartFetching = System.currentTimeMillis();
-        for(Groups faculty: getGroupIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroups())
             fetchTimetableForFaculty(faculty);
         log.info("Fetching of timetable changes complete on {} ms", System.currentTimeMillis() - timestampOfStartFetching);
     }

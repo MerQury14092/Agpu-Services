@@ -17,18 +17,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Service
-public class GetGroupIdService {
+public class GetSearchIdService {
     private final String url;
     private final ObjectMapper jsonConverter;
     private final String urlToMainPage;
 
-    public GetGroupIdService(){
+    public GetSearchIdService(){
         this.jsonConverter = new ObjectMapper();
         url = "http://www.it-institut.ru/SearchString/KeySearch?Id=118&SearchProductName=%s";
         urlToMainPage = "http://www.it-institut.ru/SearchString/Index/118";
     }
 
-    public int getId(String groupName){
+    public int getGroupId(String groupName){
         SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, groupName);
         return Arrays.stream(result)
                 .filter(element -> Objects.equals(element.Type, "Group"))
@@ -37,12 +37,21 @@ public class GetGroupIdService {
                 .orElse(0);
     }
 
-    private SearchProduct[] tryToGetSearchProductArrayFromUrl(String url, String groupName) {
-        try {
-            return getSearchProductArrayFromUrl(url, groupName);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public int getTeacherId(String teacherName){
+        SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, teacherName);
+        if(result.length == 0)
+            return 1386;
+        else
+            return result[0].SearchId;
+    }
+
+    public String getTeacherFullName(String teacherName){
+        SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, teacherName);
+        return Arrays.stream(result)
+                .filter(element -> Objects.equals(element.Type, "Teacher"))
+                .map(element -> element.SearchContent)
+                .findFirst()
+                .orElse("None");
     }
 
     public String getFullGroupName(String groupName){
@@ -54,9 +63,17 @@ public class GetGroupIdService {
                 .orElse("None");
     }
 
-    private SearchProduct[] getSearchProductArrayFromUrl(String url, String groupName) throws IOException{
+    private SearchProduct[] tryToGetSearchProductArrayFromUrl(String url, String searchString) {
+        try {
+            return getSearchProductArrayFromUrl(url, searchString);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private SearchProduct[] getSearchProductArrayFromUrl(String url, String searchString) throws IOException{
         return jsonConverter.readValue(
-                new URL(url.formatted(URLEncoder.encode(groupName, StandardCharsets.UTF_8))),
+                new URL(url.formatted(URLEncoder.encode(searchString, StandardCharsets.UTF_8))),
                 SearchProduct[].class
         );
     }

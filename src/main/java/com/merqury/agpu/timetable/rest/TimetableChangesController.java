@@ -8,7 +8,7 @@ import com.merqury.agpu.timetable.notificatoin.DTO.Webhook;
 import com.merqury.agpu.timetable.notificatoin.Webhooks;
 import com.merqury.agpu.timetable.notificatoin.interfaces.TemporarySubscriber;
 import com.merqury.agpu.timetable.notificatoin.service.WebhookRegistryService;
-import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetSearchIdService;
 import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,12 +22,12 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/timetable/changes")
 public class TimetableChangesController {
-    private final GetGroupIdService getGroupIdService;
+    private final GetSearchIdService getSearchIdService;
     private final TimetableChangesPublisher changesPublisher;
     private final WebhookRegistryService webhookRegistryService;
 
-    public TimetableChangesController(GetGroupIdService getGroupIdService) {
-        this.getGroupIdService = getGroupIdService;
+    public TimetableChangesController(GetSearchIdService getSearchIdService) {
+        this.getSearchIdService = getSearchIdService;
         webhookRegistryService = WebhookRegistryService.singleton();
         this.changesPublisher = TimetableChangesPublisher.singleton();
     }
@@ -50,7 +50,7 @@ public class TimetableChangesController {
         }
         boolean contains = false;
         Super:
-        for(Groups faculty: getGroupIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroups())
             for (String group: faculty.getGroups())
                 if(group.equals(groupId)){
                     contains = true;
@@ -104,7 +104,7 @@ public class TimetableChangesController {
     public String registerWebhook(@RequestBody Webhook webhook, HttpServletResponse response) throws IOException {
         boolean contains = false;
         Super:
-        for(Groups faculty: getGroupIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroups())
             for (String group: faculty.getGroups())
                 if(group.equals(webhook.getGroup())){
                     contains = true;

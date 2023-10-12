@@ -4,7 +4,7 @@ import com.merqury.agpu.general.Controllers;
 import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.DTO.Week;
-import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetSearchIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
 import com.merqury.agpu.timetable.service.GetWeeksService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/timetable")
 public class TimetableController {
     private final GetTimetableService service;
-    private final GetGroupIdService groupIdService;
+    private final GetSearchIdService groupIdService;
     private final GetWeeksService weeksService;
     private final String dateRegex = "^(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[0-2])\\.\\d{4}$";
 

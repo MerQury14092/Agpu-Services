@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.memory;
 
 import com.merqury.agpu.timetable.DTO.Groups;
-import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetSearchIdService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +13,7 @@ import static com.merqury.agpu.AgpuTimetableApplication.*;
 @Component
 @Log4j2
 public class GroupIdMemory {
-    private final GetGroupIdService groupSearchIdService;
+    private final GetSearchIdService groupSearchIdService;
 
     private final HashMap<String, Integer> groupSearchIdMap;
 
@@ -25,7 +25,7 @@ public class GroupIdMemory {
         return 0;
     }
 
-    public GroupIdMemory(GetGroupIdService groupSearchIdService) {
+    public GroupIdMemory(GetSearchIdService groupSearchIdService) {
         this.groupSearchIdService = groupSearchIdService;
         this.groupSearchIdMap = new HashMap<>();
         fetchData();
@@ -63,7 +63,7 @@ public class GroupIdMemory {
     }
 
     private void putInMemory(String groupName){
-        int searchId = groupSearchIdService.getId(groupName);
+        int searchId = groupSearchIdService.getGroupId(groupName);
         groupSearchIdMap.put(groupName, searchId);
     }
 
