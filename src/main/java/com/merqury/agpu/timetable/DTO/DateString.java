@@ -1,6 +1,7 @@
 package com.merqury.agpu.timetable.DTO;
 
 import static java.lang.Integer.parseInt;
+
 public class DateString implements Comparable<DateString>{
     private final int day;
     private final int month;
