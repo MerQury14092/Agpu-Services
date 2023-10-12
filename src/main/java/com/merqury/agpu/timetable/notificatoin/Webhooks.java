@@ -11,9 +11,9 @@ import java.nio.charset.StandardCharsets;
 
 @Log4j2
 public class Webhooks {
-    private static final ObjectMapper mapper;
+    private static final ObjectMapper jsonConverter;
     static  {
-        mapper = new ObjectMapper();
+        jsonConverter = new ObjectMapper();
     }
     public static boolean sendData(String host, TimetableDay timetableDay){
         try{
@@ -21,7 +21,7 @@ public class Webhooks {
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
-            connection.getOutputStream().write(mapper.writeValueAsBytes(timetableDay.deleteHolidays()));
+            connection.getOutputStream().write(jsonConverter.writeValueAsBytes(timetableDay.deleteHolidays()));
             connection.getOutputStream().flush();
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
