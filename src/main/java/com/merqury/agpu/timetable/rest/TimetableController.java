@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.rest;
 
 import com.merqury.agpu.general.Controllers;
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.DTO.Week;
 import com.merqury.agpu.timetable.service.GetGroupIdService;
@@ -29,9 +29,9 @@ public class TimetableController {
     private final String dateRegex = "^(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[0-2])\\.\\d{4}$";
 
     @GetMapping("/day")
-    public Day getTimetable(HttpServletRequest request,
-                            @PathParam("") String date,
-                            HttpServletResponse response
+    public TimetableDay getTimetable(HttpServletRequest request,
+                                     @PathParam("") String date,
+                                     HttpServletResponse response
     ) throws IOException {
         System.out.println("Request for: " + (request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id")));
         if (date == null || (request.getParameter("groupId") == null && request.getParameter("id") == null)) {
@@ -59,7 +59,7 @@ public class TimetableController {
             return null;
         }
 
-        Day res = (service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), date, false, true)).deleteHolidays();
+        TimetableDay res = (service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), date, false, true)).deleteHolidays();
         if (res.getId() == null)
             res.setId(groupName);
         else if (res.getId().equals("None"))
@@ -68,7 +68,7 @@ public class TimetableController {
     }
 
     @GetMapping("/days")
-    public List<Day> getTimetable(
+    public List<TimetableDay> getTimetable(
             @PathParam("") String startDate,
             @PathParam("") String endDate,
             HttpServletRequest request,
@@ -91,7 +91,7 @@ public class TimetableController {
                 return null;
             }
             return List.of(
-                    Day.builder()
+                    TimetableDay.builder()
                             .date(startDateMessage)
                             .id(groupIdMessage)
                             .disciplines(List.of())
@@ -118,10 +118,10 @@ public class TimetableController {
 
 
         boolean removeNull = (request.getParameter("removeEmptyDays") != null);
-        List<Day> result = service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), startDate, endDate);
-        result.forEach(Day::deleteHolidays);
+        List<TimetableDay> result = service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), startDate, endDate);
+        result.forEach(TimetableDay::deleteHolidays);
         if (removeNull)
-            result.removeIf(Day::isEmpty);
+            result.removeIf(TimetableDay::isEmpty);
         if (result.isEmpty())
             return List.of();
         if (result.get(0).getId() == null)

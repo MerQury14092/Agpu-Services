@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.notificatoin.interfaces;
 
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 
 public interface Subscriber {
-    void handleNotification(String id, Day chagedDay);
+    void handleNotification(String id, TimetableDay chagedTimetableDay);
 }

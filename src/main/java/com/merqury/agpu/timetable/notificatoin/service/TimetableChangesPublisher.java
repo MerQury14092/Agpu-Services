@@ -1,6 +1,6 @@
 package com.merqury.agpu.timetable.notificatoin.service;
 
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.notificatoin.interfaces.Subscriber;
 
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public class TimetableChangesPublisher {
         subscribers.remove(subscriber);
     }
 
-    public void publishNotification(String id, Day changes){
+    public void publishNotification(String id, TimetableDay changes){
         for(Subscriber subscriber: subscribers)
             subscriber.handleNotification(id, changes);
     }

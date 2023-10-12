@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.service;
 
 
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Discipline;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import lombok.extern.log4j.Log4j2;
@@ -27,11 +27,11 @@ public class ImageService {
         this.font = Font.createFont(Font.TRUETYPE_FONT, ImageService.class.getResourceAsStream("/fonts/jetbrains-mono(bold).ttf")).deriveFont(Font.BOLD, 16f);
     }
 
-    public BufferedImage getImageByTimetableOf6DaysHorizontal(Day[] days, int cellWidth, boolean full, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
-        int max_pairs = countPairs(days[0]);
-        for(Day day: days)
-            if(countPairs(day) > max_pairs)
-                max_pairs = countPairs(day);
+    public BufferedImage getImageByTimetableOf6DaysHorizontal(TimetableDay[] timetableDays, int cellWidth, boolean full, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
+        int max_pairs = countPairs(timetableDays[0]);
+        for(TimetableDay timetableDay : timetableDays)
+            if(countPairs(timetableDay) > max_pairs)
+                max_pairs = countPairs(timetableDay);
         BufferedImage res = new BufferedImage(cellWidth*(full?7:max_pairs)+150, 200*6+150, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = res.createGraphics();
         g.setColor(Color.WHITE);
@@ -45,21 +45,21 @@ public class ImageService {
 
         g.drawImage(headerForHorizontal(cellWidth), 0, 0, null);
 
-        for(Day day: days) {
+        for(TimetableDay timetableDay : timetableDays) {
             if(full)
-                g.drawImage(getImageByTimetableOfDayHorizontal(day, cellWidth, true, types, colors), 0, y += 200, null);
+                g.drawImage(getImageByTimetableOfDayHorizontal(timetableDay, cellWidth, true, types, colors), 0, y += 200, null);
             else
-                g.drawImage(getImageByTimetableOfDayHorizontal(day, cellWidth, true, max_pairs, types, colors), 0, y+=200, null);
+                g.drawImage(getImageByTimetableOfDayHorizontal(timetableDay, cellWidth, true, max_pairs, types, colors), 0, y+=200, null);
         }
 
         return res;
     }
 
-    public BufferedImage getImageByTimetableOf6DaysVertical(Day[] days, int cellWidth, boolean full, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
-        int max_pairs = countPairs(days[0]);
-        for(Day day: days)
-            if(countPairs(day) > max_pairs)
-                max_pairs = countPairs(day);
+    public BufferedImage getImageByTimetableOf6DaysVertical(TimetableDay[] timetableDays, int cellWidth, boolean full, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
+        int max_pairs = countPairs(timetableDays[0]);
+        for(TimetableDay timetableDay : timetableDays)
+            if(countPairs(timetableDay) > max_pairs)
+                max_pairs = countPairs(timetableDay);
         BufferedImage res = new BufferedImage(300+cellWidth*6, 150+200*(full?7:max_pairs), BufferedImage.TYPE_INT_BGR);
         Graphics2D g = res.createGraphics();
         g.setColor(Color.WHITE);
@@ -71,7 +71,7 @@ public class ImageService {
         g.drawImage(headerForVertical(), res.getWidth()-150, 0, null);
 
         for (int i = 0; i < 6; i++) {
-            g.drawImage(getImageByTimetableOfDayVertical(days[i], 600, true, full?7:max_pairs, types, colors), 150+i*cellWidth, 0, null);
+            g.drawImage(getImageByTimetableOfDayVertical(timetableDays[i], 600, true, full?7:max_pairs, types, colors), 150+i*cellWidth, 0, null);
         }
 
         return res;
@@ -208,17 +208,17 @@ public class ImageService {
         g.setFont(last);
     }
 
-    public BufferedImage getImageByTimetableOfDayHorizontal(Day day, int cellWidth, boolean forTable, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
-        return getImageByTimetableOfDayHorizontal(day, cellWidth, forTable, 7, types, colors);
+    public BufferedImage getImageByTimetableOfDayHorizontal(TimetableDay timetableDay, int cellWidth, boolean forTable, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
+        return getImageByTimetableOfDayHorizontal(timetableDay, cellWidth, forTable, 7, types, colors);
     }
-    public BufferedImage getImageByTimetableOfDayVertical(Day day, int cellWidth, boolean forTable, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
-        return getImageByTimetableOfDayVertical(day, cellWidth, forTable, 7, types, colors);
+    public BufferedImage getImageByTimetableOfDayVertical(TimetableDay timetableDay, int cellWidth, boolean forTable, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
+        return getImageByTimetableOfDayVertical(timetableDay, cellWidth, forTable, 7, types, colors);
     }
 
 
 
-    public BufferedImage getImageByTimetableOfDayHorizontal(Day day, int cellWidth, boolean forTable, int countCells, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
-        for(Discipline disc: day.getDisciplines()){
+    public BufferedImage getImageByTimetableOfDayHorizontal(TimetableDay timetableDay, int cellWidth, boolean forTable, int countCells, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
+        for(Discipline disc: timetableDay.getDisciplines()){
             disc.setColspan(switch (disc.getTime()){
                 case "8:00-9:30" -> 0;
                 case "9:40-11:10" -> 1;
@@ -230,7 +230,7 @@ public class ImageService {
                 default -> -1;
             });
         }
-        BufferedImage res = new BufferedImage(cellWidth*(forTable?countCells:countPairs(day))+150, 350-(forTable?150:0), BufferedImage.TYPE_INT_RGB);
+        BufferedImage res = new BufferedImage(cellWidth*(forTable?countCells:countPairs(timetableDay))+150, 350-(forTable?150:0), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = res.createGraphics();
         g.setColor(Color.WHITE);
         g.fillRect(0, 150-(forTable?150:0), res.getWidth(), res.getHeight());
@@ -247,18 +247,18 @@ public class ImageService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
 
-        LocalDate date = LocalDate.parse(day.getDate(), formatter);
+        LocalDate date = LocalDate.parse(timetableDay.getDate(), formatter);
 
         String dayOfWeek = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.forLanguageTag("RU"));
         dayOfWeek = Character.toUpperCase(dayOfWeek.charAt(0))+dayOfWeek.substring(1);
 
 
         printString_new(g, dayOfWeek, new Rectangle(0, 200-(forTable?150:0), 150, 20), font.deriveFont(20f));
-        printString_new(g, day.getDate(), new Rectangle(0, 240-(forTable?150:0), 150, 20), font.deriveFont(20f));
+        printString_new(g, timetableDay.getDate(), new Rectangle(0, 240-(forTable?150:0), 150, 20), font.deriveFont(20f));
 
         int i = 0;
 
-        List<Discipline> disciplines = day.getDisciplines();
+        List<Discipline> disciplines = timetableDay.getDisciplines();
         for (int j = 0; j < disciplines.size(); j++) {
             Discipline disc = disciplines.get(j);
             if(j != disciplines.size() - 1){
@@ -274,7 +274,7 @@ public class ImageService {
             i++;
         }
 
-        for (int j = 0; j < (forTable?countCells:countPairs(day)); j++) {
+        for (int j = 0; j < (forTable?countCells:countPairs(timetableDay)); j++) {
             g.drawRect(150+j*cellWidth, 150-(forTable?150:0), cellWidth, res.getHeight());
         }
 
@@ -284,8 +284,8 @@ public class ImageService {
         return res;
     }
 
-    public BufferedImage getImageByTimetableOfDayVertical(Day day, int cellWidth, boolean forTable, int countCells, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
-        for(Discipline disc: day.getDisciplines()){
+    public BufferedImage getImageByTimetableOfDayVertical(TimetableDay timetableDay, int cellWidth, boolean forTable, int countCells, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
+        for(Discipline disc: timetableDay.getDisciplines()){
             disc.setColspan(switch (disc.getTime()){
                 case "8:00-9:30" -> 0;
                 case "9:40-11:10" -> 1;
@@ -297,7 +297,7 @@ public class ImageService {
                 default -> -1;
             });
         }
-        BufferedImage res = new BufferedImage((forTable?0:150)+cellWidth, 150+200*(forTable ? countCells : countPairs(day)), BufferedImage.TYPE_INT_RGB);
+        BufferedImage res = new BufferedImage((forTable?0:150)+cellWidth, 150+200*(forTable ? countCells : countPairs(timetableDay)), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = res.createGraphics();
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, res.getWidth(), res.getHeight());
@@ -317,14 +317,14 @@ public class ImageService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
 
-        LocalDate date = LocalDate.parse(day.getDate(), formatter);
+        LocalDate date = LocalDate.parse(timetableDay.getDate(), formatter);
 
         String dayOfWeek = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.forLanguageTag("RU"));
         dayOfWeek = Character.toUpperCase(dayOfWeek.charAt(0))+dayOfWeek.substring(1);
 
 
         printString_new(g, dayOfWeek, new Rectangle(forTable?0:150, 25, cellWidth, 20), font.deriveFont(20f));
-        printString_new(g, day.getDate(), new Rectangle(forTable?0:150, 50, cellWidth, 20), font.deriveFont(20f));
+        printString_new(g, timetableDay.getDate(), new Rectangle(forTable?0:150, 50, cellWidth, 20), font.deriveFont(20f));
 
         g.drawRect(forTable?0:150, 100, cellWidth, 50);
         g.drawRect(forTable?0:150, 100, cellWidth/2, 50);
@@ -334,7 +334,7 @@ public class ImageService {
 
         int i = 0;
 
-        List<Discipline> disciplines = day.getDisciplines();
+        List<Discipline> disciplines = timetableDay.getDisciplines();
         for (int j = 0; j < disciplines.size(); j++) {
             Discipline disc = disciplines.get(j);
             if(j != disciplines.size() - 1){
@@ -350,7 +350,7 @@ public class ImageService {
             i++;
         }
 
-        for (int j = 0; j < countPairs(day); j++) {
+        for (int j = 0; j < countPairs(timetableDay); j++) {
             g.drawRect(150-(forTable?150:0), 150+j*200, cellWidth, 200);
         }
 
@@ -365,10 +365,10 @@ public class ImageService {
         return res;
     }
 
-    private int countPairs(Day day){
-        if(day.getDisciplines().isEmpty())
+    private int countPairs(TimetableDay timetableDay){
+        if(timetableDay.getDisciplines().isEmpty())
             return 3;
-        return switch (day.getDisciplines().get(day.getDisciplines().size()-1).getTime()){
+        return switch (timetableDay.getDisciplines().get(timetableDay.getDisciplines().size()-1).getTime()){
             case "13:30-15:00" -> 4;
             case "15:10-16:40" -> 5;
             case "16:50-18:20" -> 6;

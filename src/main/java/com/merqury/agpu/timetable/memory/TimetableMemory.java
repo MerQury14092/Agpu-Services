@@ -1,6 +1,6 @@
 package com.merqury.agpu.timetable.memory;
 
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import static com.merqury.agpu.AgpuTimetableApplication.*;
 
 @Component
 public class TimetableMemory {
-    private final List<Day> memory;
+    private final List<TimetableDay> memory;
     private static long memoryExpirationTime;
 
     static {
@@ -27,15 +27,15 @@ public class TimetableMemory {
         memory = new ArrayList<>();
     }
 
-    public void addDiscipline(Day day){
-        memory.add(day);
-        addTaskForCleanDayFromMemory(day);
+    public void addDiscipline(TimetableDay timetableDay){
+        memory.add(timetableDay);
+        addTaskForCleanDayFromMemory(timetableDay);
     }
 
-    private void addTaskForCleanDayFromMemory(Day day){
+    private void addTaskForCleanDayFromMemory(TimetableDay timetableDay){
         async(() -> {
             trySleep(memoryExpirationTime);
-            memory.remove(day);
+            memory.remove(timetableDay);
         });
     }
 
@@ -47,21 +47,21 @@ public class TimetableMemory {
         }
     }
 
-    public Day getDisciplineByDate(String id, String date){
+    public TimetableDay getDisciplineByDate(String id, String date){
         var res =  getFilteredByIdAndDateTimetableDays(id, date);
         if(!res.isEmpty())
             return res.get(0);
         return getEmptyDateWith(id, date);
     }
 
-    private List<Day> getFilteredByIdAndDateTimetableDays(String id, String date){
+    private List<TimetableDay> getFilteredByIdAndDateTimetableDays(String id, String date){
         return memory.stream()
                 .filter(day -> (day.getId().equals(id) && day.getDate().equals(date)))
                 .toList();
     }
 
-    private Day getEmptyDateWith(String id, String date){
-        return Day.builder()
+    private TimetableDay getEmptyDateWith(String id, String date){
+        return TimetableDay.builder()
                 .date(date)
                 .id(id)
                 .disciplines(Collections.emptyList())

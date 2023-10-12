@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Day{
+public class TimetableDay {
     String date;
     String id;
     List<Discipline> disciplines;
@@ -21,14 +21,14 @@ public class Day{
         return disciplines.isEmpty();
     }
 
-    public Day deleteHolidays(){
+    public TimetableDay deleteHolidays(){
         disciplines = disciplines.stream()
                 .filter(discipline -> !discipline.getName().equals("HOLIDAY"))
                 .collect(Collectors.toList());
         return this;
     }
 
-    public Day proxy(){
+    public TimetableDay proxy(){
         List<Discipline> proxyList = new ArrayList<>();
 
         for (Discipline disc: disciplines) {
@@ -41,7 +41,7 @@ public class Day{
             proxyList.add(proxyDisc);
         }
 
-        return Day.builder()
+        return TimetableDay.builder()
                 .date(date)
                 .id(id)
                 .disciplines(proxyList)

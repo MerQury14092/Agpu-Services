@@ -8,9 +8,9 @@
 * `id` - имя группы (учителя)
 * `date` - дата дня в формате dd.MM.yyyy
 
-URL: ***http://merqury.fun/api/timetable/day***
+URL: ***http://merqury.fun/api/timetable/timetableDay***
 
-URL (для учителей): ***http://merqury.fun/api/timetable/teacher/day***
+URL (для учителей): ***http://merqury.fun/api/timetable/teacher/timetableDay***
 
 
 <hr>
@@ -29,9 +29,9 @@ URL (для учителей): ***http://merqury.fun/api/timetable/teacher/day**
 Опциональные параметры URL:
 * `removeEmptyDays` - удалит те дни, которые не имеют расписания
 
-URL: ***http://merqury.fun/api/timetable/days***
+URL: ***http://merqury.fun/api/timetable/timetableDays***
 
-URL (для учителей): ***http://merqury.fun/api/timetable/teacher/days***
+URL (для учителей): ***http://merqury.fun/api/timetable/teacher/timetableDays***
 
 <hr>
 

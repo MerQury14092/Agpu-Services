@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.rest;
 
 import com.merqury.agpu.general.Controllers;
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Discipline;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import com.merqury.agpu.timetable.service.ImageService;
@@ -63,7 +63,7 @@ public class ImageManagerController {
 
     @PostMapping(value = "/day", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] day(
-            @RequestBody Day day,
+            @RequestBody TimetableDay timetableDay,
             HttpServletResponse response,
             HttpServletRequest request
     ) throws IOException {
@@ -75,12 +75,12 @@ public class ImageManagerController {
         if(request.getParameter("cell_width") != null && isDigit(request.getParameter("cell_width")) && request.getParameter("cell_width").length() < 5)
             cellWidth = Integer.parseInt(request.getParameter("cell_width"));
         if(request.getParameter("vertical") == null) {
-            BufferedImage res = service.getImageByTimetableOfDayHorizontal(day, cellWidth, false, types, colors);
+            BufferedImage res = service.getImageByTimetableOfDayHorizontal(timetableDay, cellWidth, false, types, colors);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(res, "PNG", baos);
             return baos.toByteArray();
         }
-        BufferedImage res = service.getImageByTimetableOfDayVertical(day, cellWidth, false, types, colors);
+        BufferedImage res = service.getImageByTimetableOfDayVertical(timetableDay, cellWidth, false, types, colors);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(res, "PNG", baos);
         return baos.toByteArray();
@@ -88,26 +88,26 @@ public class ImageManagerController {
 
     @PostMapping(value = "/6days", produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] days(
-            @RequestBody Day[] days,
+            @RequestBody TimetableDay[] timetableDays,
             HttpServletResponse response,
             HttpServletRequest request
     ) throws IOException {
         if (checkOrientation(response, request)) return null;
-        if(days.length > 6 || days.length == 0){
+        if(timetableDays.length > 6 || timetableDays.length == 0){
             Controllers.sendError(416, "Expected array of [1; 6] days", response);
         }
-        if(days.length < 6){
-            Day[] oldDays = new Day[days.length];
-            System.arraycopy(days, 0, oldDays, 0, days.length);
+        if(timetableDays.length < 6){
+            TimetableDay[] oldTimetableDays = new TimetableDay[timetableDays.length];
+            System.arraycopy(timetableDays, 0, oldTimetableDays, 0, timetableDays.length);
 
-            days = new Day[6];
-            System.arraycopy(oldDays, 0, days, 0, oldDays.length);
-            for (int i = oldDays.length; i < days.length; i++) {
-                String currentDateStr = oldDays[0].getDate();
+            timetableDays = new TimetableDay[6];
+            System.arraycopy(oldTimetableDays, 0, timetableDays, 0, oldTimetableDays.length);
+            for (int i = oldTimetableDays.length; i < timetableDays.length; i++) {
+                String currentDateStr = oldTimetableDays[0].getDate();
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
                 LocalDate date = LocalDate.parse(currentDateStr, formatter);
                 currentDateStr = date.plusDays(i).format(formatter);
-                days[i] = Day.builder()
+                timetableDays[i] = TimetableDay.builder()
                         .disciplines(List.of())
                         .date(currentDateStr)
                         .build();
@@ -120,14 +120,14 @@ public class ImageManagerController {
         if(request.getParameter("cell_width") != null && isDigit(request.getParameter("cell_width")) && request.getParameter("cell_width").length() < 5)
             cellWidth = Integer.parseInt(request.getParameter("cell_width"));
         if(request.getParameter("vertical") != null){
-            BufferedImage res = service.getImageByTimetableOf6DaysVertical(days, cellWidth, false, types, colors);
+            BufferedImage res = service.getImageByTimetableOf6DaysVertical(timetableDays, cellWidth, false, types, colors);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(res, "PNG", baos);
             return baos.toByteArray();
         }
 
         if(request.getParameter("vertical") == null) {
-            BufferedImage res = service.getImageByTimetableOf6DaysHorizontal(days, cellWidth, false, types, colors);
+            BufferedImage res = service.getImageByTimetableOf6DaysHorizontal(timetableDays, cellWidth, false, types, colors);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(res, "PNG", baos);
             return baos.toByteArray();

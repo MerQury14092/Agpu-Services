@@ -26,5 +26,5 @@
 * `groupId` - Название группы, для которой мониторить изменения расписания
 * `timeout` - время в секундах, за которое будет происходить мониторинг изменений. По истечении (что значит нет изменений) вернётся пустой массив
 
-URL: ***http://merqury.fun/api/timetable/changes/day***
+URL: ***http://merqury.fun/api/timetable/changes/timetableDay***
 <hr>

@@ -1,11 +1,12 @@
 package com.merqury.agpu.timetable.notificatoin.service;
 
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
 import com.merqury.agpu.timetable.service.GetGroupIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ public class ChangesFetcher {
     private final TimetableMemory timetableMemory;
     private final TimetableChangesPublisher timetableChangesPublisher;
 
+    @Autowired
     public ChangesFetcher(
             GetTimetableService getTimetableService,
             GetGroupIdService getGroupIdService,
@@ -66,19 +68,27 @@ public class ChangesFetcher {
     }
 
     private void fetchTimetableForGroup(String groupName) throws IOException {
-        Day todayFromMemory = timetableMemory.getDisciplineByDate(groupName, getToday());
-        Day tomorrowFromMemory = timetableMemory.getDisciplineByDate(groupName, getTomorrow());
-        Day todayFromSite = getTimetableService.getDisciplines(groupName, getToday(), false, false);
-        Day tomorrowFromSite = getTimetableService.getDisciplines(groupName, getTomorrow(), false, false);
+        TimetableDay todayFromMemory = timetableMemory.getDisciplineByDate(groupName, getToday());
+        TimetableDay tomorrowFromMemory = timetableMemory.getDisciplineByDate(groupName, getTomorrow());
+        TimetableDay todayFromSite = getTimetableService.getDisciplines(groupName, getToday(), false, false);
+        TimetableDay tomorrowFromSite = getTimetableService.getDisciplines(groupName, getTomorrow(), false, false);
         checkDayChanges(todayFromSite, todayFromMemory);
+        checkDayChangesAfter(TimeUnit.SECONDS.toMillis(15), tomorrowFromSite, tomorrowFromMemory);
+    }
+
+    private void checkDayChangesAfter(long milliseconds, TimetableDay timetableDayFromSite, TimetableDay timetableDayFromMemory){
         async(() -> {
-            try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(15));
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            checkDayChanges(tomorrowFromSite, tomorrowFromMemory);
+            trySleep(milliseconds);
+            checkDayChanges(timetableDayFromSite, timetableDayFromMemory);
         });
+    }
+
+    private void trySleep(long milliseconds){
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String getToday(){
@@ -91,9 +101,9 @@ public class ChangesFetcher {
         return LocalDate.now().plusDays(1).format(formatter);
     }
 
-    private void checkDayChanges(Day day, Day dayFromMemory){
-        if(!dayFromMemory.equals(day)){
-            timetableChangesPublisher.publishNotification(day.getId(), day);
+    private void checkDayChanges(TimetableDay timetableDay, TimetableDay timetableDayFromMemory){
+        if(!timetableDayFromMemory.equals(timetableDay)){
+            timetableChangesPublisher.publishNotification(timetableDay.getId(), timetableDay);
         }
     }
 

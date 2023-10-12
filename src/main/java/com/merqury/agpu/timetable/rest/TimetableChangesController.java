@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.rest;
 
 import com.merqury.agpu.general.Controllers;
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.notificatoin.DTO.Notification;
 import com.merqury.agpu.timetable.notificatoin.DTO.Webhook;
@@ -13,12 +13,9 @@ import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.server.PathParam;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.http.MediaType;
-import org.springframework.util.MimeType;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -37,7 +34,7 @@ public class TimetableChangesController {
 
 
     @GetMapping("/day")
-    public Day getChanges(
+    public TimetableDay getChanges(
             @PathParam("") String groupId,
             HttpServletResponse response,
             @PathParam("") Optional<Integer> timeout
@@ -66,7 +63,7 @@ public class TimetableChangesController {
 
         TemporarySubscriber subscriber = new TemporarySubscriber(timeout.get(), groupId);
         changesPublisher.addSubscriber(subscriber);
-        Day res = subscriber.get();
+        TimetableDay res = subscriber.get();
         if(res == null){
             changesPublisher.removeSubscriber(subscriber);
             return null;
@@ -76,7 +73,7 @@ public class TimetableChangesController {
     }
 
     @PostMapping("/push")
-    public String pushNotification(HttpServletRequest request, HttpServletResponse response, @RequestBody Day day) throws IOException {
+    public String pushNotification(HttpServletRequest request, HttpServletResponse response, @RequestBody TimetableDay timetableDay) throws IOException {
         String authToken = request.getHeader("Authorization");
         if(authToken == null) {
             Controllers.sendError(403, "Forbidden", response);
@@ -86,7 +83,7 @@ public class TimetableChangesController {
             Controllers.sendError(403, "Forbidden", response);
             return null;
         }
-        changesPublisher.publishNotification(day.getId(), day);
+        changesPublisher.publishNotification(timetableDay.getId(), timetableDay);
         return "OK";
     }
 
@@ -97,10 +94,10 @@ public class TimetableChangesController {
             @PathParam("") Optional<Integer> timeout
     ) throws IOException
     {
-        Day day = getChanges(groupId, response, timeout);
-        if(day == null)
+        TimetableDay timetableDay = getChanges(groupId, response, timeout);
+        if(timetableDay == null)
             return Notification.noChanges("N/A");
-        return Notification.thereAreChanges(day.getDate());
+        return Notification.thereAreChanges(timetableDay.getDate());
     }
 
     @PostMapping(value = "webhook/register", produces = MediaType.APPLICATION_JSON_VALUE)
