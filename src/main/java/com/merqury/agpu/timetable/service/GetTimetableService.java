@@ -2,11 +2,8 @@ package com.merqury.agpu.timetable.service;
 
 import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Discipline;
-import com.merqury.agpu.timetable.DTO.GroupDay;
-import com.merqury.agpu.timetable.DTO.TeacherDay;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import com.merqury.agpu.timetable.memory.GroupIdMemory;
-import com.merqury.agpu.timetable.memory.TeacherTimetableMemory;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
@@ -31,35 +28,25 @@ import java.util.Scanner;
 public class GetTimetableService {
     private final GroupIdMemory groupIdMemory;
     private final TimetableMemory studentTimetableMemory;
-    private final TeacherTimetableMemory teacherTimetableMemory;
     private final GetTeacherIdService getTeacherIdService;
 
-    public GetTimetableService(GroupIdMemory groupIdMemory, TimetableMemory memory, TeacherTimetableMemory teacherMemory, GetTeacherIdService getTeacherIdService) {
+    public GetTimetableService(GroupIdMemory groupIdMemory, TimetableMemory memory, GetTeacherIdService getTeacherIdService) {
         this.groupIdMemory = groupIdMemory;
         this.studentTimetableMemory = memory;
-        this.teacherTimetableMemory = teacherMemory;
         this.getTeacherIdService = getTeacherIdService;
     }
 
     private static final int ownerId = 118;
     private static final String url = "http://www.it-institut.ru/Raspisanie/SearchedRaspisanie?OwnerId=%d&SearchId=%d&SearchString=None&Type=%s&WeekId=%d";
 
-    public List<GroupDay> getDisciplines(String groupName, String startDate, String endDate) throws IOException {
-        List<GroupDay> result = new ArrayList<>();
+    public List<Day> getDisciplines(String groupName, String startDate, String endDate) throws IOException {
+        List<Day> result = new ArrayList<>();
         for(String date: getDatesBetween(startDate, endDate)) {
-            GroupDay day = (GroupDay) getDisciplines(groupName, date, false, true);
-            day.setGroupName(groupName);
+            Day day = getDisciplines(groupName, date, false, true);
+            day.setId(groupName);
             result.add(day);
         }
         return proxyList(result);
-    }
-
-    public List<TeacherDay> getDisciplinesTeacher(String teacherName, String startDate, String endDate) throws IOException {
-        List<TeacherDay> result = new ArrayList<>();
-        for(String date: getDatesBetween(startDate, endDate)) {
-            result.add((TeacherDay) getDisciplines(teacherName, date, true, true));
-        }
-        return proxyListTeacher(result);
     }
 
     public Day getDisciplines(String id, String date, boolean forTeacher, boolean useCache) throws IOException {
@@ -137,8 +124,8 @@ public class GetTimetableService {
             fio = getTeacherIdService.getFIO(id).split(",")[0];
 
             if(fio.equals("None"))
-                return TeacherDay.builder()
-                        .teacherName("None")
+                return Day.builder()
+                        .id("None")
                         .date(date)
                         .disciplines(List.of(Discipline.holiday()))
                         .build();
@@ -148,21 +135,17 @@ public class GetTimetableService {
         List<Discipline> result;
 
         if(useCache){
-            Day day = forTeacher?teacherTimetableMemory.getDisciplineByDate(id, date):studentTimetableMemory.getDisciplineByDate(id, date);
+            Day day = studentTimetableMemory.getDisciplineByDate(id, date);
             result = day.getDisciplines();
             if(!result.isEmpty()) {
                 log.info("info: memory call");
-                if(day instanceof GroupDay groupDay){
-                    groupDay.setGroupName(id);
-                    return groupDay;
-                }
+                day.setId(id);
                 return day;
             }
         }
 
         result = new ArrayList<>();
 
-//        log.info("info: it-institut call on url: {}", url);
         URL url1 = new URL(url);
 
         HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
@@ -227,18 +210,11 @@ public class GetTimetableService {
             result.add(Discipline.holiday());
         }
 
-        if(!forTeacher)
-            return GroupDay.builder()
-                    .date(date)
-                    .groupName(id)
-                    .disciplines(result)
-                    .build();
-        else
-            return TeacherDay.builder()
-                    .teacherName(name)
-                    .date(date)
-                    .disciplines(result)
-                    .build();
+        return Day.builder()
+                .date(date)
+                .id(forTeacher ? name : id)
+                .disciplines(result)
+                .build();
     }
 
     private void assignMissingData(String id, List<Discipline> result, Integer[] col, String date, boolean forTeacher) {
@@ -305,7 +281,7 @@ public class GetTimetableService {
 
 
         if(!result.isEmpty()){
-            Day check = forTeacher?teacherTimetableMemory.getDisciplineByDate(id, result.get(0).getDate()):studentTimetableMemory.getDisciplineByDate(id, result.get(0).getDate());
+            Day check = studentTimetableMemory.getDisciplineByDate(id, result.get(0).getDate());
             if(!check.isEmpty()) {
                 return;
             }
@@ -321,33 +297,18 @@ public class GetTimetableService {
             result.add(Discipline.holiday());
         }
 
-
-        if(forTeacher)
-            teacherTimetableMemory.addDiscipline(TeacherDay.builder()
-                    .teacherName(id)
-                    .date(date)
-                    .disciplines(result)
-                    .build()
-            );
-        else
-            studentTimetableMemory.addDiscipline(GroupDay.builder()
-                    .groupName(groupNama)
-                    .date(date)
-                    .disciplines(result)
-                    .build()
-            );
+        studentTimetableMemory.addDiscipline(Day.builder()
+                .id(forTeacher ? id : groupNama)
+                .date(date)
+                .disciplines(result)
+                .build()
+        );
     }
 
-    private List<GroupDay> proxyList(List<GroupDay> source){
-        List<GroupDay> res = new ArrayList<>();
-        for(GroupDay groupDay : source)
+    private List<Day> proxyList(List<Day> source){
+        List<Day> res = new ArrayList<>();
+        for(Day groupDay : source)
             res.add(groupDay.proxy());
-        return res;
-    }
-    private List<TeacherDay> proxyListTeacher(List<TeacherDay> source){
-        List<TeacherDay> res = new ArrayList<>();
-        for(TeacherDay day: source)
-            res.add(day.proxy());
         return res;
     }
 

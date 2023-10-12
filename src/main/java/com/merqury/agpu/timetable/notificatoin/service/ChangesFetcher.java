@@ -1,9 +1,8 @@
 package com.merqury.agpu.timetable.notificatoin.service;
 
-import com.merqury.agpu.timetable.DTO.GroupDay;
+import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
-import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher;
 import com.merqury.agpu.timetable.service.GetGroupIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
 import lombok.extern.log4j.Log4j2;
@@ -67,10 +66,10 @@ public class ChangesFetcher {
     }
 
     private void fetchTimetableForGroup(String groupName) throws IOException {
-        GroupDay todayFromMemory = timetableMemory.getDisciplineByDate(groupName, getToday());
-        GroupDay tomorrowFromMemory = timetableMemory.getDisciplineByDate(groupName, getTomorrow());
-        GroupDay todayFromSite = (GroupDay) getTimetableService.getDisciplines(groupName, getToday(), false, false);
-        GroupDay tomorrowFromSite = (GroupDay) getTimetableService.getDisciplines(groupName, getTomorrow(), false, false);
+        Day todayFromMemory = timetableMemory.getDisciplineByDate(groupName, getToday());
+        Day tomorrowFromMemory = timetableMemory.getDisciplineByDate(groupName, getTomorrow());
+        Day todayFromSite = getTimetableService.getDisciplines(groupName, getToday(), false, false);
+        Day tomorrowFromSite = getTimetableService.getDisciplines(groupName, getTomorrow(), false, false);
         checkDayChanges(todayFromSite, todayFromMemory);
         async(() -> {
             try {
@@ -92,9 +91,9 @@ public class ChangesFetcher {
         return LocalDate.now().plusDays(1).format(formatter);
     }
 
-    private void checkDayChanges(GroupDay day, GroupDay dayFromMemory){
+    private void checkDayChanges(Day day, Day dayFromMemory){
         if(!dayFromMemory.equals(day)){
-            timetableChangesPublisher.publishNotification(day.getGroupName(), day);
+            timetableChangesPublisher.publishNotification(day.getId(), day);
         }
     }
 

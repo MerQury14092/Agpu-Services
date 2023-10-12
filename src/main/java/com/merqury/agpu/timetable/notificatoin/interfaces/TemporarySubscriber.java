@@ -1,15 +1,14 @@
 package com.merqury.agpu.timetable.notificatoin.interfaces;
 
+
 import com.merqury.agpu.timetable.DTO.Day;
-import com.merqury.agpu.timetable.DTO.GroupDay;
-import com.merqury.agpu.timetable.notificatoin.interfaces.Subscriber;
 
 import java.util.concurrent.TimeUnit;
 
 import static com.merqury.agpu.AgpuTimetableApplication.*;
 
 public class TemporarySubscriber implements Subscriber {
-    private volatile GroupDay day;
+    private volatile Day day;
     private final int seconds;
     private final String expectedGroupName;
 
@@ -26,7 +25,7 @@ public class TemporarySubscriber implements Subscriber {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        day = GroupDay.builder()
+        day = Day.builder()
                 .date("NOT")
                 .build();
     }
@@ -34,10 +33,10 @@ public class TemporarySubscriber implements Subscriber {
     @Override
     public void handleNotification(String id, Day chagedDay) {
         if(id.equals(expectedGroupName))
-            day = (GroupDay) chagedDay;
+            day = (Day) chagedDay;
     }
 
-    public GroupDay get(){
+    public Day get(){
         while (day == null)
             Thread.onSpinWait();
         if(day.getDate().equals("NOT"))

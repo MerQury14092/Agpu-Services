@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.rest;
 
 import com.merqury.agpu.general.Controllers;
-import com.merqury.agpu.timetable.DTO.GroupDay;
+import com.merqury.agpu.timetable.DTO.Day;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.notificatoin.DTO.Notification;
 import com.merqury.agpu.timetable.notificatoin.DTO.Webhook;
@@ -37,7 +37,7 @@ public class TimetableChangesController {
 
 
     @GetMapping("/day")
-    public GroupDay getChanges(
+    public Day getChanges(
             @PathParam("") String groupId,
             HttpServletResponse response,
             @PathParam("") Optional<Integer> timeout
@@ -66,7 +66,7 @@ public class TimetableChangesController {
 
         TemporarySubscriber subscriber = new TemporarySubscriber(timeout.get(), groupId);
         changesPublisher.addSubscriber(subscriber);
-        GroupDay res = subscriber.get();
+        Day res = subscriber.get();
         if(res == null){
             changesPublisher.removeSubscriber(subscriber);
             return null;
@@ -76,7 +76,7 @@ public class TimetableChangesController {
     }
 
     @PostMapping("/push")
-    public String pushNotification(HttpServletRequest request, HttpServletResponse response, @RequestBody GroupDay day) throws IOException {
+    public String pushNotification(HttpServletRequest request, HttpServletResponse response, @RequestBody Day day) throws IOException {
         String authToken = request.getHeader("Authorization");
         if(authToken == null) {
             Controllers.sendError(403, "Forbidden", response);
@@ -86,7 +86,7 @@ public class TimetableChangesController {
             Controllers.sendError(403, "Forbidden", response);
             return null;
         }
-        changesPublisher.publishNotification(day.getGroupName(), day);
+        changesPublisher.publishNotification(day.getId(), day);
         return "OK";
     }
 
@@ -97,7 +97,7 @@ public class TimetableChangesController {
             @PathParam("") Optional<Integer> timeout
     ) throws IOException
     {
-        GroupDay day = getChanges(groupId, response, timeout);
+        Day day = getChanges(groupId, response, timeout);
         if(day == null)
             return Notification.noChanges("N/A");
         return Notification.thereAreChanges(day.getDate());

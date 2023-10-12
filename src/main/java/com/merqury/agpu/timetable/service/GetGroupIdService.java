@@ -23,11 +23,13 @@ public class GetGroupIdService {
     private final String url;
     private final ObjectMapper objectMapper;
     private final String urlToMainPage;
+
     public GetGroupIdService(){
         this.objectMapper = new ObjectMapper();
         url = "http://www.it-institut.ru/SearchString/KeySearch?Id=118&SearchProductName=%s";
         urlToMainPage = "http://www.it-institut.ru/SearchString/Index/118";
     }
+
     public int getId(String groupName){
 
         SearchProduct[] result;
@@ -85,16 +87,6 @@ public class GetGroupIdService {
             res.getGroups().add(p2.getAllElements().first().text());
         }
         return res;
-    }
-
-    private String searchLineWith(String text, String substring){
-        String[] arr = text.split("\n");
-        for(String cur : arr) {
-            if (cur.contains(substring)) {
-                return cur;
-            }
-        }
-        return "N";
     }
 
     public String getFullGroupName(String groupName){

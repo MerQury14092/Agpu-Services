@@ -1,7 +1,6 @@
 package com.merqury.agpu.timetable.memory;
 
-import com.merqury.agpu.timetable.DTO.GroupDay;
-import lombok.extern.log4j.Log4j2;
+import com.merqury.agpu.timetable.DTO.Day;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -10,44 +9,38 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Component
-//@Log4j2
 public class TimetableMemory {
-    private final List<GroupDay> memory;
+    private final List<Day> memory;
 
     public TimetableMemory(){
         memory = new ArrayList<>();
     }
 
-    public void addDiscipline(GroupDay groupDay){
-        //log.info("added day: {}", groupDay);
-        memory.add(groupDay);
+    public void addDiscipline(Day day){
+        memory.add(day);
         Thread cleaner = new Thread(() -> {
-            //log.info("task fo remove added");
             try {
                 Thread.sleep(TimeUnit.HOURS.toMillis(2));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            //log.info("object now removing {}", groupDay);
-            memory.remove(groupDay);
+            memory.remove(day);
         });
         cleaner.setDaemon(true);
         cleaner.start();
     }
 
-    public GroupDay getDisciplineByDate(String groupName, String date){
-        //log.info("trying get discipline by date {} and by name {}\nDisciplines in memory:", date, groupName);
-        //memory.forEach(log::info);
-
+    public Day getDisciplineByDate(String id, String date){
+        
         var res =  memory.stream()
-                .filter(groupGroupDay -> (groupGroupDay.getGroupName().equals(groupName) && groupGroupDay.getDate().equals(date)))
+                .filter(day -> (day.getId().equals(id) && day.getDate().equals(date)))
                 .toList();
         if(!res.isEmpty())
             return res.get(0);
 
-        return GroupDay.builder()
+        return Day.builder()
                 .date(date)
-                .groupName(groupName)
+                .id(id)
                 .disciplines(Collections.emptyList())
                 .build();
     }
