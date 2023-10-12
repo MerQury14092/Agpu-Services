@@ -15,7 +15,11 @@ public class Webhook implements Subscriber {
     @Override
     public void handleNotification(String id, Day chagedDay) {
         if(id.equals(group))
-            if(!Webhooks.sendData(url, chagedDay))
-                TimetableChangesPublisher.singleton().removeSubscriber(this);
+            publishNotification(chagedDay);
+    }
+
+    private void publishNotification(Day chagedDay){
+        if(!Webhooks.sendData(url, chagedDay))
+            TimetableChangesPublisher.singleton().removeSubscriber(this);
     }
 }
