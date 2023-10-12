@@ -4,6 +4,7 @@ import com.merqury.agpu.timetable.notificatoin.DTO.Webhook;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class WebhookRegistryService {
     private final TimetableChangesPublisher changesPublisher;
@@ -23,6 +24,9 @@ public class WebhookRegistryService {
         this.changesPublisher = TimetableChangesPublisher.singleton();
     }
 
+    /**
+     * @return status code
+     */
     public int addWebhook(Webhook webhook){
         if(hasWebhook(webhook))
             return 1;
@@ -32,23 +36,32 @@ public class WebhookRegistryService {
     }
 
     public List<Webhook> getWebhooks(String url){
-        return memory.stream().filter(el -> el.getUrl().equals(url)).toList();
+        return memory.stream()
+                .filter(
+                        el -> Objects.equals(el.getUrl(), url)
+                )
+                .toList();
     }
 
-    public boolean hasWebhook(Webhook wbhk){
-        for(Webhook webhook: getWebhooks(wbhk.getUrl()))
-            if(webhook.getGroup().equals(wbhk.getGroup()))
+    public boolean hasWebhook(Webhook webhook){
+        for(Webhook currentWebhook: getWebhooks(webhook.getUrl()))
+            if(Objects.equals(currentWebhook.getGroup(), webhook.getGroup()))
                 return true;
         return false;
     }
 
     public void removeWebhook(String url){
-        memory.removeIf(el -> {
-            if(el.getUrl().equals(url)){
-                changesPublisher.removeSubscriber(el);
-                return true;
-            }
-            return false;
-        });
+        removeSubscribesByUrl(url);
+        removeFromMemoryByUrl(url);
+    }
+
+    private void removeSubscribesByUrl(String url){
+        memory.stream()
+                .filter(element -> Objects.equals(element.getUrl(), url))
+                .forEach(changesPublisher::removeSubscriber);
+    }
+
+    private void removeFromMemoryByUrl(String url){
+        memory.removeIf(element -> Objects.equals(element.getUrl(), url));
     }
 }
