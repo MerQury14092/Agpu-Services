@@ -1,7 +1,9 @@
 package com.merqury.agpu.timetable.notificatoin.service;
 
+import com.merqury.agpu.timetable.ServerStates;
 import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
 import com.merqury.agpu.timetable.service.GetSearchIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
@@ -40,7 +42,11 @@ public class ChangesFetcher {
     private void startDaemonForRegularTimetableFetching(){
         async(() -> {
             while (true){
+                while (!ServerStates.isGroupUpdated)
+                    ;
+                ServerStates.isTimetableFertched = false;
                 tryFetchTimetable();
+                ServerStates.isTimetableFertched = true;
                 waitHours();
             }
         });
@@ -70,8 +76,8 @@ public class ChangesFetcher {
     private void fetchTimetableForGroup(String groupName) throws IOException {
         TimetableDay todayFromMemory = timetableMemory.getDisciplineByDate(groupName, getToday());
         TimetableDay tomorrowFromMemory = timetableMemory.getDisciplineByDate(groupName, getTomorrow());
-        TimetableDay todayFromSite = getTimetableService.getDisciplines(groupName, getToday(), false, false);
-        TimetableDay tomorrowFromSite = getTimetableService.getDisciplines(groupName, getTomorrow(), false, false);
+        TimetableDay todayFromSite = getTimetableService.getTimetableDayFromMemoryOrSiteAndCachingIfNeedIt(groupName, getToday(), TimetableOwner.GROUP);
+        TimetableDay tomorrowFromSite = getTimetableService.getTimetableDayFromMemoryOrSiteAndCachingIfNeedIt(groupName, getTomorrow(), TimetableOwner.GROUP);
         checkDayChanges(todayFromSite, todayFromMemory);
         checkDayChangesAfter(TimeUnit.SECONDS.toMillis(15), tomorrowFromSite, tomorrowFromMemory);
     }

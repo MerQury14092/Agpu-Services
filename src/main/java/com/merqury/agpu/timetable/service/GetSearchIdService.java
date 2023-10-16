@@ -3,6 +3,7 @@ package com.merqury.agpu.timetable.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.DTO.SearchProduct;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -28,25 +29,22 @@ public class GetSearchIdService {
         urlToMainPage = "http://www.it-institut.ru/SearchString/Index/118";
     }
 
-    public int getGroupId(String groupName){
-        return getSearchId(groupName, "Group");
+    public int getSearchId(String searchText, TimetableOwner owner){
+
+        return switch (owner) {
+            case GROUP -> getSearchIdByType(searchText, "Group");
+            case TEACHER -> getSearchIdByType(searchText, "Teacher");
+            case CLASSROOM -> getSearchIdByType(searchText, "Classroom");
+        };
     }
 
-    public int getTeacherId(String teacherName){
-        return getSearchId(teacherName, "Teacher");
-    }
-
-    private int getSearchId(String searchText, String expectedType){
+    private int getSearchIdByType(String searchText, String expectedType){
         SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, searchText);
         return Arrays.stream(result)
                 .filter(element -> Objects.equals(element.Type, expectedType))
                 .map(element -> element.SearchId)
                 .findFirst()
                 .orElse(0);
-    }
-
-    public String getTeacherFullName(String teacherName){
-        return getSearchContent(teacherName, "Teacher");
     }
 
     public String getFullGroupName(String groupName){

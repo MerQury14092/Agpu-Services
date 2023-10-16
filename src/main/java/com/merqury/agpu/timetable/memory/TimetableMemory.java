@@ -1,5 +1,6 @@
 package com.merqury.agpu.timetable.memory;
 
+import com.merqury.agpu.timetable.DTO.Discipline;
 import com.merqury.agpu.timetable.DTO.TimetableDay;
 import org.springframework.stereotype.Component;
 
@@ -13,14 +14,10 @@ import static com.merqury.agpu.AgpuTimetableApplication.*;
 @Component
 public class TimetableMemory {
     private final List<TimetableDay> memory;
-    private static long memoryExpirationTime;
+    private static final long memoryExpirationTime;
 
     static {
         memoryExpirationTime = TimeUnit.HOURS.toMillis(2);
-    }
-
-    public static void setMemoryExpirationTime(long newValue){
-        memoryExpirationTime = newValue;
     }
 
     public TimetableMemory(){
@@ -28,8 +25,14 @@ public class TimetableMemory {
     }
 
     public void addDiscipline(TimetableDay timetableDay){
+        addingStubIfTimetableDayIsEmpty(timetableDay);
         memory.add(timetableDay);
         addTaskForCleanDayFromMemory(timetableDay);
+    }
+
+    private void addingStubIfTimetableDayIsEmpty(TimetableDay day){
+        if (day.isEmpty())
+            day.getDisciplines().add(Discipline.holiday());
     }
 
     private void addTaskForCleanDayFromMemory(TimetableDay timetableDay){

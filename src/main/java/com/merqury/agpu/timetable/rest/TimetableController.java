@@ -4,6 +4,7 @@ import com.merqury.agpu.general.Controllers;
 import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.DTO.Week;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import com.merqury.agpu.timetable.service.GetSearchIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
 import com.merqury.agpu.timetable.service.GetWeeksService;
@@ -31,6 +32,7 @@ public class TimetableController {
     @GetMapping("/day")
     public TimetableDay getTimetable(HttpServletRequest request,
                                      @PathParam("") String date,
+                                     @PathParam("") TimetableOwner owner,
                                      HttpServletResponse response
     ) throws IOException {
         System.out.println("Request for: " + (request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id")));
@@ -45,21 +47,17 @@ public class TimetableController {
         if (!Pattern.matches(dateRegex, date))
             date = "Invalid date format";
         String groupName = groupIdService.getFullGroupName(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"));
-        if (groupName.equals("None")) {
-            Controllers.sendError(400, "Unknown group", response);
-            return null;
-        }
-        if (!groupName.trim().equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"))) {
-            Controllers.sendError(400, "Unknown group", response);
-            return null;
-        }
 
         if (date.equals("Invalid date format")) {
             Controllers.sendError(400, date, response);
             return null;
         }
 
-        TimetableDay res = (service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), date, false, true)).deleteHolidays();
+        TimetableDay res = (
+                service.getTimetableDayFromMemoryOrSiteAndCachingIfNeedIt(request.getParameter("id") == null ?
+                        request.getParameter("groupId") :
+                        request.getParameter("id"), date, owner)
+        ).deleteHolidays();
         if (res.getId() == null)
             res.setId(groupName);
         else if (res.getId().equals("None"))
@@ -76,7 +74,6 @@ public class TimetableController {
     ) throws IOException {
         System.out.println("Request for: " + (request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id")));
         if (startDate == null || endDate == null || (request.getParameter("groupId") == null && request.getParameter("id") == null)) {
-            String startDateMessage = startDate;
             String groupIdMessage = request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id");
             if (startDate == null) {
                 Controllers.sendError(400, "Expected start date", response);
@@ -92,7 +89,7 @@ public class TimetableController {
             }
             return List.of(
                     TimetableDay.builder()
-                            .date(startDateMessage)
+                            .date(startDate)
                             .id(groupIdMessage)
                             .disciplines(List.of())
                             .build()
@@ -118,7 +115,7 @@ public class TimetableController {
 
 
         boolean removeNull = (request.getParameter("removeEmptyDays") != null);
-        List<TimetableDay> result = service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), startDate, endDate);
+        List<TimetableDay> result = service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), TimetableOwner.GROUP, startDate, endDate);
         result.forEach(TimetableDay::deleteHolidays);
         if (removeNull)
             result.removeIf(TimetableDay::isEmpty);
