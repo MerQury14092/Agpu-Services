@@ -440,7 +440,14 @@ public class ImageService {
         g.setFont(font);
         int fontHeight = g.getFontMetrics().getHeight();
         for(String line: lines(g, disc.getName(), res.getWidth(), font))
-            printString(g, line, 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);
+            printString(g, line, 0, y += (int) (fontHeight * 1.5), res.getWidth(), fontHeight, font);
+        if(disc.isDistant()){
+            Stroke lastStroke = g.getStroke();
+            g.setStroke(new BasicStroke(2));
+            g.drawOval(width-10-30, 160, 30, 30);
+            g.setStroke(lastStroke);
+            printString_new(g, "Д", new Rectangle(width-9-30, 160, 30, 30), font);
+        }
         y = 230;
         printString(g,
                 types.containsKey(disc.getType())?

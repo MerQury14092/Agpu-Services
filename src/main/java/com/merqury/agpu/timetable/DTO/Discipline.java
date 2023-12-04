@@ -20,6 +20,7 @@ public class Discipline {
     private int subgroup;
     private DisciplineType type;
     private String groupName;
+    private boolean isDistant;
     @JsonIgnore
     private int colspan;
 
@@ -42,6 +43,7 @@ public class Discipline {
                 subgroup,
                 type,
                 groupName,
+                isDistant,
                 colspan
         );
     }
