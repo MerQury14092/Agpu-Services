@@ -320,7 +320,7 @@ public class GetTimetableService {
         );
 
         for(var entry: mapBetweenNameAndType.entrySet()){
-            if(discipline.getName().toLowerCase().contains(entry.getKey())){
+            if(discipline.getName().toLowerCase().contains(","+entry.getKey())){
                 discipline.setName(discipline.getName().replace(","+entry.getKey(), ""));
                 discipline.setType(entry.getValue());
                 return;
