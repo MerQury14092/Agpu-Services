@@ -384,6 +384,9 @@ public class ImageService {
     ){
         BufferedImage res = new BufferedImage(width, 200, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = res.createGraphics();
+        if(disc.getSubgroup() != 0 && width == 600){
+            return getImageByTimetableOfSubDiscipline(disc, null, 600, types, colors);
+        }
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setColor(
                 colors.containsKey(disc.getType())?
@@ -476,20 +479,30 @@ public class ImageService {
     public BufferedImage getImageByTimetableOfSubDiscipline(Discipline disc1, Discipline disc2, int width, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){
         BufferedImage res = new BufferedImage(width, 200, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = res.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, res.getWidth(), res.getHeight());
+        g.setStroke(new BasicStroke(3));
 
-        if(disc1.getSubgroup() == disc2.getSubgroup() || disc2.getSubgroup() > disc1.getSubgroup()){
-            g.drawImage(getImageByTimetableOfDiscipline(disc1, width / 2, types, colors), 0, 0, null);
-            g.drawImage(getImageByTimetableOfDiscipline(disc2, width / 2, types, colors), width / 2, 0, null);
+        if(disc1 == null || disc2 == null){
+            if(disc1 == null)
+                g.drawImage(getImageByTimetableOfDiscipline(disc2, width / 2, types, colors), disc2.getSubgroup() == 2 ? (width / 2) : 0, 0, null);
+            if(disc2 == null)
+                g.drawImage(getImageByTimetableOfDiscipline(disc1, width / 2, types, colors), disc1.getSubgroup() == 2 ? (width / 2) : 0, 0, null);
         }
         else {
-            g.drawImage(getImageByTimetableOfDiscipline(disc1, width / 2, types, colors), width / 2, 0, null);
-            g.drawImage(getImageByTimetableOfDiscipline(disc2, width / 2, types, colors), 0, 0, null);
+            if(disc1.getSubgroup() == disc2.getSubgroup() || disc2.getSubgroup() > disc1.getSubgroup()){
+                g.drawImage(getImageByTimetableOfDiscipline(disc1, width / 2, types, colors), 0, 0, null);
+                g.drawImage(getImageByTimetableOfDiscipline(disc2, width / 2, types, colors), width / 2, 0, null);
+            }
+            else {
+                g.drawImage(getImageByTimetableOfDiscipline(disc1, width / 2, types, colors), width / 2, 0, null);
+                g.drawImage(getImageByTimetableOfDiscipline(disc2, width / 2, types, colors), 0, 0, null);
+            }
         }
-        g.setStroke(new BasicStroke(3));
+
         g.setColor(Color.BLACK);
         g.drawLine(width/2, 0, width/2, res.getHeight());
-
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         return res;
     }
 }
