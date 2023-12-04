@@ -47,20 +47,39 @@ public class GetTimetableService {
     ) throws IOException {
         List<TimetableDay> result = new ArrayList<>();
         for(String date: getDatesBetween(startDate, endDate))
-            result.add(getTimetableDayFromMemoryOrSiteAndCachingIfNeedIt(id, date, owner));
+            result.add(getTimetableDayFromMemoryOrSiteAndCacheIfNeedIt(id, date, owner));
         return result;
     }
 
-    public TimetableDay getTimetableDayFromMemoryOrSiteAndCachingIfNeedIt(
+    public TimetableDay getTimetableDayFromMemoryOrSiteAndCacheIfNeedIt(
             String id, String date, TimetableOwner owner
     ) throws IOException {
-        TimetableDay dayFromMemory = timetableMemory.getDisciplineByDate(id, date);
+        TimetableDay res = getTimetableDayFromMemory(id, date, owner);
+        if(res.getId().equals("None")) {
+            TimetableDay[] week = getTimetableWeek(id, date, owner);
+            for (TimetableDay timetableDay : week) {
+                timetableMemory.addDiscipline(timetableDay);
+            }
+            res = getFromArrayByDate(week, date);
+            timetableMemory.addDiscipline(res);
+        }
+        return res;
+    }
+
+    public TimetableDay getTimetableDayFromSite(
+            String id, String date, TimetableOwner owner
+    ) throws IOException {
+        TimetableDay[] week = getTimetableWeek(id, date, owner);
+        return getFromArrayByDate(week, date);
+    }
+
+    public TimetableDay getTimetableDayFromMemory(
+            String id, String date, TimetableOwner owner
+    ) {
+        TimetableDay dayFromMemory = timetableMemory.getTimetableByDate(id, date, owner);
         if(!dayFromMemory.getDisciplines().isEmpty())
             return dayFromMemory;
-        TimetableDay[] week = getTimetableWeek(id, date, owner);
-        for (TimetableDay weekDay: week)
-            saveInMemory(weekDay);
-        return getFromArrayByDate(week, date);
+        return TimetableDay.builder().id("None").date(date).disciplines(List.of()).owner(owner).build();
     }
 
     public TimetableDay[] getTimetableWeek(String id, String date, TimetableOwner owner) throws IOException {
@@ -235,10 +254,6 @@ public class GetTimetableService {
         }
     }
 
-    private void saveInMemory(TimetableDay day){
-        timetableMemory.addDiscipline(day);
-    }
-
     private Integer[] parseCol(Elements elements){
         List<Integer> res = new ArrayList<>();
         for(Element el: elements)
@@ -266,7 +281,11 @@ public class GetTimetableService {
             day.getDisciplines().add(result);
             return;
         }
-        result.setName(spans.get(0).text());
+        String name = spans.get(0).text();
+        List<Character> characters = List.of(',', '.');
+        if(characters.contains(name.charAt(name.length()-1)))
+            name = name.substring(0, name.length()-1);
+        result.setName(name);
         String[] prepodAndAudience = spans.get(1).text().split(",");
         if (prepodAndAudience.length >= 3) {
             result.setTeacherName(prepodAndAudience[0].trim());
@@ -288,15 +307,15 @@ public class GetTimetableService {
 
     private void assignTypeAndRenameDiscipline(Discipline discipline){
         Map<String, DisciplineType> mapBetweenNameAndType = Map.of(
-                "конс.", DisciplineType.cons,
-                "лек.", DisciplineType.lec,
+                "конс", DisciplineType.cons,
+                "лек", DisciplineType.lec,
                 "фэпо", DisciplineType.fepo,
-                "зач.", DisciplineType.cred,
+                "зач", DisciplineType.cred,
                 "выходной", DisciplineType.hol,
                 "каникулы", DisciplineType.hol,
-                "лаб.", DisciplineType.lab,
-                "экз.", DisciplineType.exam,
-                "прак.", DisciplineType.prac
+                "лаб", DisciplineType.lab,
+                "экз", DisciplineType.exam,
+                "прак", DisciplineType.prac
         );
 
         for(var entry: mapBetweenNameAndType.entrySet()){

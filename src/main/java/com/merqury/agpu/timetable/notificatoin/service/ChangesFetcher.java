@@ -44,9 +44,9 @@ public class ChangesFetcher {
             while (true){
                 while (!ServerStates.isGroupUpdated)
                     ;
-                ServerStates.isTimetableFertched = false;
+                ServerStates.isTimetableFetched = false;
                 tryFetchTimetable();
-                ServerStates.isTimetableFertched = true;
+                ServerStates.isTimetableFetched = true;
                 waitHours();
             }
         });
@@ -74,18 +74,30 @@ public class ChangesFetcher {
     }
 
     private void fetchTimetableForGroup(String groupName) throws IOException {
-        TimetableDay todayFromMemory = timetableMemory.getDisciplineByDate(groupName, getToday());
-        TimetableDay tomorrowFromMemory = timetableMemory.getDisciplineByDate(groupName, getTomorrow());
-        TimetableDay todayFromSite = getTimetableService.getTimetableDayFromMemoryOrSiteAndCachingIfNeedIt(groupName, getToday(), TimetableOwner.GROUP);
-        TimetableDay tomorrowFromSite = getTimetableService.getTimetableDayFromMemoryOrSiteAndCachingIfNeedIt(groupName, getTomorrow(), TimetableOwner.GROUP);
-        checkDayChanges(todayFromSite, todayFromMemory);
-        checkDayChangesAfter(TimeUnit.SECONDS.toMillis(15), tomorrowFromSite, tomorrowFromMemory);
+        checkChangesByDate(groupName, getToday());
+        checkChangesByDateAfter(TimeUnit.SECONDS.toMillis(15), groupName, getTomorrow());
     }
 
-    private void checkDayChangesAfter(long milliseconds, TimetableDay timetableDayFromSite, TimetableDay timetableDayFromMemory){
+    private void tryToCheckChangesByDate(String groupName, String date){
+        try {
+            checkChangesByDate(groupName, date);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void checkChangesByDate(String groupName, String date) throws IOException {
+        TimetableDay fromMemory = timetableMemory.getTimetableByDate(groupName, date, TimetableOwner.GROUP);
+        if(fromMemory.isSynthetic)
+            return;
+        TimetableDay fromSite = getTimetableService.getTimetableDayFromSite(groupName, date, TimetableOwner.GROUP);
+        checkDayChanges(fromSite, fromMemory);
+    }
+
+    private void checkChangesByDateAfter(long milliseconds, String groupName, String date){
         async(() -> {
             trySleep(milliseconds);
-            checkDayChanges(timetableDayFromSite, timetableDayFromMemory);
+            tryToCheckChangesByDate(groupName, date);
         });
     }
 
@@ -108,14 +120,15 @@ public class ChangesFetcher {
     }
 
     private void checkDayChanges(TimetableDay timetableDay, TimetableDay timetableDayFromMemory){
-        if(!timetableDayFromMemory.equals(timetableDay)){
+        if(!timetableDayFromMemory.equals(timetableDay) && !timetableDayFromMemory.getDisciplines().isEmpty()){
             timetableChangesPublisher.publishNotification(timetableDay.getId(), timetableDay);
+            timetableMemory.addDiscipline(timetableDay);
         }
     }
 
     private void waitHours(){
         try {
-            Thread.sleep(TimeUnit.HOURS.toMillis(2));
+            Thread.sleep(TimeUnit.MINUTES.toMillis(30));
         } catch (InterruptedException e){
             throw new RuntimeException(e);
         }

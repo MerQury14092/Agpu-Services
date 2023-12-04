@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -21,10 +24,39 @@ import java.util.Map;
 @Service
 @Log4j2
 public class ImageService {
-    private Font font;
+    private Font font, defaultFont;
 
     public ImageService() throws IOException, FontFormatException {
         this.font = Font.createFont(Font.TRUETYPE_FONT, ImageService.class.getResourceAsStream("/fonts/jetbrains-mono(bold).ttf")).deriveFont(Font.BOLD, 16f);
+        this.defaultFont = this.font;
+    }
+
+    public void loadFont(String urlToFont){
+        try {
+            if(urlToFont.equals("times")){
+                this.font = Font.createFont(Font.TRUETYPE_FONT, ImageService.class.getResourceAsStream("/fonts/times-new-romans(bold).ttf")).deriveFont(Font.BOLD, 20f);
+                return;
+            } else if (urlToFont.equals("arial")) {
+                this.font = Font.createFont(Font.TRUETYPE_FONT, ImageService.class.getResourceAsStream("/fonts/arial.ttf")).deriveFont(Font.PLAIN, 18f);
+                return;
+            }
+
+            font = Font.createFont(Font.TRUETYPE_FONT, new URI(urlToFont).toURL().openStream()).deriveFont(Font.PLAIN, 16f);
+            log.info("FONT LOADED FROM: {}", urlToFont);
+        } catch (FontFormatException e) {
+            font = defaultFont;
+            log.info("FONT DONT LOADED FROM {}\nFONT ERROR: {}", urlToFont, e.getMessage());
+        } catch (IOException e) {
+            font = defaultFont;
+            log.info("FONT DONT LOADED FROM {}\nIO ERROR: {}", urlToFont, e.getMessage());
+        } catch (URISyntaxException e) {
+            font = defaultFont;
+            log.info("FONT DONT LOADED FROM {}\nURI ERROR: {}", urlToFont, e.getMessage());
+        }
+    }
+
+    public void resetFont(){
+        font = defaultFont;
     }
 
     public BufferedImage getImageByTimetableOf6DaysHorizontal(TimetableDay[] timetableDays, int cellWidth, boolean full, Map<DisciplineType, String> types, Map<DisciplineType, String> colors){

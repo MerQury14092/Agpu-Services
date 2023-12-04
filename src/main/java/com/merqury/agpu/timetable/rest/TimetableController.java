@@ -4,6 +4,7 @@ import com.merqury.agpu.general.Controllers;
 import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
 import com.merqury.agpu.timetable.DTO.Week;
+import com.merqury.agpu.timetable.ServerStates;
 import com.merqury.agpu.timetable.enums.TimetableOwner;
 import com.merqury.agpu.timetable.service.GetSearchIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
@@ -25,7 +26,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/api/timetable")
 public class TimetableController {
     private final GetTimetableService service;
-    private final GetSearchIdService groupIdService;
+    private final GetSearchIdService searchIdService;
     private final GetWeeksService weeksService;
     private final String dateRegex = "^(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[0-2])\\.\\d{4}$";
 
@@ -41,20 +42,24 @@ public class TimetableController {
                 Controllers.sendError(400, "Expected date", response);
                 return null;
             }
-            Controllers.sendError(400, "Expected groupId|id", response);
+            Controllers.sendError(400, "id", response);
             return null;
         }
         if (!Pattern.matches(dateRegex, date))
             date = "Invalid date format";
-        String groupName = groupIdService.getFullGroupName(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"));
+        String groupName = searchIdService.getFullGroupName(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"));
 
         if (date.equals("Invalid date format")) {
             Controllers.sendError(400, date, response);
             return null;
         }
 
+        if(searchIdService.getSearchId(request.getParameter("id"), owner) == 0){
+            Controllers.sendError(400, "Unknown id", response);
+            return null;
+        }
         TimetableDay res = (
-                service.getTimetableDayFromMemoryOrSiteAndCachingIfNeedIt(request.getParameter("id") == null ?
+                service.getTimetableDayFromMemoryOrSiteAndCacheIfNeedIt(request.getParameter("id") == null ?
                         request.getParameter("groupId") :
                         request.getParameter("id"), date, owner)
         ).deleteHolidays();
@@ -69,6 +74,7 @@ public class TimetableController {
     public List<TimetableDay> getTimetable(
             @PathParam("") String startDate,
             @PathParam("") String endDate,
+            @PathParam("") TimetableOwner owner,
             HttpServletRequest request,
             HttpServletResponse response
     ) throws IOException {
@@ -84,7 +90,7 @@ public class TimetableController {
                 return null;
             }
             if (request.getParameter("groupId") == null && request.getParameter("id") == null) {
-                Controllers.sendError(400, "Expected groupId|id", response);
+                Controllers.sendError(400, "id", response);
                 return null;
             }
             return List.of(
@@ -95,6 +101,10 @@ public class TimetableController {
                             .build()
             );
         }
+        if(searchIdService.getSearchId(request.getParameter("id"), owner) == 0){
+            Controllers.sendError(400, "Unknown id", response);
+            return null;
+        }
         if (!Pattern.matches(dateRegex, startDate)) {
             Controllers.sendError(400, "Invalid date format (start date)", response);
             return null;
@@ -103,7 +113,7 @@ public class TimetableController {
             Controllers.sendError(400, "Invalid date format (end date)", response);
             return null;
         }
-        String groupName = groupIdService.getFullGroupName(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"));
+        String groupName = searchIdService.getFullGroupName(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"));
         if (groupName.equals("None")) {
             Controllers.sendError(400, "Unknown group", response);
             return null;
@@ -115,7 +125,7 @@ public class TimetableController {
 
 
         boolean removeNull = (request.getParameter("removeEmptyDays") != null);
-        List<TimetableDay> result = service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), TimetableOwner.GROUP, startDate, endDate);
+        List<TimetableDay> result = service.getDisciplines(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"), owner, startDate, endDate);
         result.forEach(TimetableDay::deleteHolidays);
         if (removeNull)
             result.removeIf(TimetableDay::isEmpty);
@@ -136,6 +146,6 @@ public class TimetableController {
 
     @GetMapping("/groups")
     public List<Groups> groups() {
-        return groupIdService.getAllGroupsFromMainPage();
+        return searchIdService.getAllGroupsFromMainPage();
     }
 }

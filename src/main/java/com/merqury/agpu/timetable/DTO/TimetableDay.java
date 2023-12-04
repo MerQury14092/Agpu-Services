@@ -1,6 +1,7 @@
 package com.merqury.agpu.timetable.DTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -14,7 +15,11 @@ import java.util.stream.Collectors;
 public class TimetableDay {
     String date;
     String id;
+    TimetableOwner owner;
     List<Discipline> disciplines;
+
+    @JsonIgnore
+    public boolean isSynthetic;
 
     @JsonIgnore
     public boolean isEmpty(){
@@ -44,6 +49,7 @@ public class TimetableDay {
         return TimetableDay.builder()
                 .date(date)
                 .id(id)
+                .owner(owner)
                 .disciplines(proxyList)
                 .build();
     }

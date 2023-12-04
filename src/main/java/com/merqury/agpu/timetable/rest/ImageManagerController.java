@@ -68,7 +68,8 @@ public class ImageManagerController {
             HttpServletRequest request
     ) throws IOException {
         if (checkOrientation(response, request)) return null;
-
+        if (request.getParameter("font") != null)
+            service.loadFont(request.getParameter("font"));
         Map<DisciplineType, String> types = extractMappingForDisciplineType(request);
         Map<DisciplineType, String> colors = extractMappingForDisciplineTypeColors(request);
         int cellWidth = 600;
@@ -83,6 +84,7 @@ public class ImageManagerController {
         BufferedImage res = service.getImageByTimetableOfDayVertical(timetableDay, cellWidth, false, types, colors);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(res, "PNG", baos);
+        service.resetFont();
         return baos.toByteArray();
     }
 
@@ -92,6 +94,8 @@ public class ImageManagerController {
             HttpServletResponse response,
             HttpServletRequest request
     ) throws IOException {
+        if (request.getParameter("font") != null)
+            service.loadFont(request.getParameter("font"));
         if (checkOrientation(response, request)) return null;
         if(timetableDays.length > 6 || timetableDays.length == 0){
             Controllers.sendError(416, "Expected array of [1; 6] days", response);
@@ -123,6 +127,7 @@ public class ImageManagerController {
             BufferedImage res = service.getImageByTimetableOf6DaysVertical(timetableDays, cellWidth, false, types, colors);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(res, "PNG", baos);
+            service.resetFont();
             return baos.toByteArray();
         }
 
@@ -130,6 +135,7 @@ public class ImageManagerController {
             BufferedImage res = service.getImageByTimetableOf6DaysHorizontal(timetableDays, cellWidth, false, types, colors);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(res, "PNG", baos);
+            service.resetFont();
             return baos.toByteArray();
         }
         return null;

@@ -3,6 +3,7 @@ package com.merqury.agpu.timetable.rest;
 import com.merqury.agpu.general.Controllers;
 import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
+import com.merqury.agpu.timetable.memory.TimetableMemory;
 import com.merqury.agpu.timetable.notificatoin.DTO.Notification;
 import com.merqury.agpu.timetable.notificatoin.DTO.Webhook;
 import com.merqury.agpu.timetable.notificatoin.Webhooks;
@@ -17,6 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Optional;
 
 @RestController
@@ -24,10 +27,14 @@ import java.util.Optional;
 public class TimetableChangesController {
     private final GetSearchIdService getSearchIdService;
     private final TimetableChangesPublisher changesPublisher;
+    private final TimetableMemory memory;
     private final WebhookRegistryService webhookRegistryService;
+    private final MessageDigest digest;
 
-    public TimetableChangesController(GetSearchIdService getSearchIdService) {
+    public TimetableChangesController(GetSearchIdService getSearchIdService, TimetableMemory memory, MessageDigest digest) {
         this.getSearchIdService = getSearchIdService;
+        this.memory = memory;
+        this.digest = digest;
         webhookRegistryService = WebhookRegistryService.singleton();
         this.changesPublisher = TimetableChangesPublisher.singleton();
     }
@@ -79,10 +86,13 @@ public class TimetableChangesController {
             Controllers.sendError(403, "Forbidden", response);
             return null;
         }
-        if(!authToken.equals("Petrakov14092")) {
+        String encryptedAuthToken = new String(digest.digest(authToken.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+        if(!encryptedAuthToken.equals("=�\u001E>Gg\u001EUmù�*�rX�㯘FްВ�i����")) {
             Controllers.sendError(403, "Forbidden", response);
             return null;
         }
+        timetableDay.isSynthetic = true;
+        memory.addDiscipline(timetableDay);
         changesPublisher.publishNotification(timetableDay.getId(), timetableDay);
         return "OK";
     }
