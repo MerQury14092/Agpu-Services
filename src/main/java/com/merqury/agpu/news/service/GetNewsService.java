@@ -22,15 +22,24 @@ import static com.merqury.agpu.general.AgpuConstants.hostSite;
 @Service
 @Log4j2
 public class GetNewsService {
-    private static final String urlForEverything = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?PAGEN_1=%d";
-    private static final String urlForArticle = hostSite+"/struktura-vuza/faculties-institutes/%s/news/news.php?ELEMENT_ID=%d";
+    private static final String faculty_header = "faculties-institutes/";
+    private static final String urlForEverything = hostSite+"/struktura-vuza/%s/news/news.php?PAGEN_1=%d";
+    private static final String urlForArticle = hostSite+"/struktura-vuza/%s/news/news.php?ELEMENT_ID=%d";
     private final static String urlAgpuNews = "http://agpu.net/news.php";
+    private final static List<String> nonStandardCategories;
+
+    static {
+        nonStandardCategories = List.of(
+                "educationaltechnopark",
+                "PedagogicalQuantorium"
+        );
+    }
 
     public NewsResponse getArticlesByFaculty(String faculty, int page) throws IOException {
         List<PreviewArticle> res = new ArrayList<>();
         Document doc;
         try {
-            doc = Jsoup.parse(new URL(String.format(urlForEverything, faculty, page)), 5000);
+            doc = Jsoup.parse(new URL(String.format(urlForEverything, nonStandardCategories.contains(faculty)?faculty:faculty_header+faculty, page)), 5000);
         } catch (HttpStatusException e){
             NewsResponse err = new NewsResponse();
             err.setCurrentPage(0);
@@ -54,7 +63,7 @@ public class GetNewsService {
         }
         else {
             try {
-                doc = Jsoup.parse(new URL(String.format(urlForArticle, faculty, id)), 5000);
+                doc = Jsoup.parse(new URL(String.format(urlForArticle, nonStandardCategories.contains(faculty)?faculty:faculty_header+faculty, id)), 5000);
             } catch (HttpStatusException e){
                 FullArticle err = new FullArticle();
                 err.setTitle("Article not found");
