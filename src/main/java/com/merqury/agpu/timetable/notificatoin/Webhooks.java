@@ -1,7 +1,7 @@
 package com.merqury.agpu.timetable.notificatoin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.merqury.agpu.timetable.DTO.GroupDay;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.IOException;
@@ -11,17 +11,17 @@ import java.nio.charset.StandardCharsets;
 
 @Log4j2
 public class Webhooks {
-    private static final ObjectMapper mapper;
+    private static final ObjectMapper jsonConverter;
     static  {
-        mapper = new ObjectMapper();
+        jsonConverter = new ObjectMapper();
     }
-    public static boolean sendData(String host, GroupDay day){
+    public static boolean sendData(String host, TimetableDay timetableDay){
         try{
             HttpURLConnection connection = (HttpURLConnection) new URL((host.contains("http://")||host.contains("https://"))?host:"http://"+host).openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
-            connection.getOutputStream().write(mapper.writeValueAsBytes(day.deleteHolidays()));
+            connection.getOutputStream().write(jsonConverter.writeValueAsBytes(timetableDay.deleteHolidays()));
             connection.getOutputStream().flush();
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);

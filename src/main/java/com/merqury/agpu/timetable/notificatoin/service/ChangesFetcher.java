@@ -1,12 +1,14 @@
 package com.merqury.agpu.timetable.notificatoin.service;
 
-import com.merqury.agpu.timetable.DTO.GroupDay;
+import com.merqury.agpu.timetable.ServerStates;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
-import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher;
-import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetSearchIdService;
 import com.merqury.agpu.timetable.service.GetTimetableService;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -20,17 +22,18 @@ import static com.merqury.agpu.AgpuTimetableApplication.*;
 @Log4j2
 public class ChangesFetcher {
     private final GetTimetableService getTimetableService;
-    private final GetGroupIdService getGroupIdService;
+    private final GetSearchIdService getSearchIdService;
     private final TimetableMemory timetableMemory;
     private final TimetableChangesPublisher timetableChangesPublisher;
 
+    @Autowired
     public ChangesFetcher(
             GetTimetableService getTimetableService,
-            GetGroupIdService getGroupIdService,
+            GetSearchIdService getSearchIdService,
             TimetableMemory timetableMemory
     ){
         this.getTimetableService = getTimetableService;
-        this.getGroupIdService = getGroupIdService;
+        this.getSearchIdService = getSearchIdService;
         this.timetableMemory = timetableMemory;
         this.timetableChangesPublisher = TimetableChangesPublisher.singleton();
         startDaemonForRegularTimetableFetching();
@@ -39,7 +42,11 @@ public class ChangesFetcher {
     private void startDaemonForRegularTimetableFetching(){
         async(() -> {
             while (true){
+                while (!ServerStates.isGroupUpdated)
+                    ;
+                ServerStates.isTimetableFetched = false;
                 tryFetchTimetable();
+                ServerStates.isTimetableFetched = true;
                 waitHours();
             }
         });
@@ -56,7 +63,7 @@ public class ChangesFetcher {
     private void fetchTimetable() throws IOException {
         log.info("Start fetching timetable");
         long timestampOfStartFetching = System.currentTimeMillis();
-        for(Groups faculty: getGroupIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroupsFromMainPage())
             fetchTimetableForFaculty(faculty);
         log.info("Fetching of timetable changes complete on {} ms", System.currentTimeMillis() - timestampOfStartFetching);
     }
@@ -67,19 +74,39 @@ public class ChangesFetcher {
     }
 
     private void fetchTimetableForGroup(String groupName) throws IOException {
-        GroupDay todayFromMemory = timetableMemory.getDisciplineByDate(groupName, getToday());
-        GroupDay tomorrowFromMemory = timetableMemory.getDisciplineByDate(groupName, getTomorrow());
-        GroupDay todayFromSite = (GroupDay) getTimetableService.getDisciplines(groupName, getToday(), false, false);
-        GroupDay tomorrowFromSite = (GroupDay) getTimetableService.getDisciplines(groupName, getTomorrow(), false, false);
-        checkDayChanges(todayFromSite, todayFromMemory);
+        checkChangesByDate(groupName, getToday());
+        checkChangesByDateAfter(TimeUnit.SECONDS.toMillis(15), groupName, getTomorrow());
+    }
+
+    private void tryToCheckChangesByDate(String groupName, String date){
+        try {
+            checkChangesByDate(groupName, date);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void checkChangesByDate(String groupName, String date) throws IOException {
+        TimetableDay fromMemory = timetableMemory.getTimetableByDate(groupName, date, TimetableOwner.GROUP);
+        if(fromMemory.isSynthetic)
+            return;
+        TimetableDay fromSite = getTimetableService.getTimetableDayFromSite(groupName, date, TimetableOwner.GROUP);
+        checkDayChanges(fromSite, fromMemory);
+    }
+
+    private void checkChangesByDateAfter(long milliseconds, String groupName, String date){
         async(() -> {
-            try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(15));
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            checkDayChanges(tomorrowFromSite, tomorrowFromMemory);
+            trySleep(milliseconds);
+            tryToCheckChangesByDate(groupName, date);
         });
+    }
+
+    private void trySleep(long milliseconds){
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String getToday(){
@@ -92,15 +119,16 @@ public class ChangesFetcher {
         return LocalDate.now().plusDays(1).format(formatter);
     }
 
-    private void checkDayChanges(GroupDay day, GroupDay dayFromMemory){
-        if(!dayFromMemory.equals(day)){
-            timetableChangesPublisher.publishNotification(day.getGroupName(), day);
+    private void checkDayChanges(TimetableDay timetableDay, TimetableDay timetableDayFromMemory){
+        if(!timetableDayFromMemory.equals(timetableDay) && !timetableDayFromMemory.getDisciplines().isEmpty()){
+            timetableChangesPublisher.publishNotification(timetableDay.getId(), timetableDay);
+            timetableMemory.addDiscipline(timetableDay);
         }
     }
 
     private void waitHours(){
         try {
-            Thread.sleep(TimeUnit.HOURS.toMillis(2));
+            Thread.sleep(TimeUnit.MINUTES.toMillis(30));
         } catch (InterruptedException e){
             throw new RuntimeException(e);
         }

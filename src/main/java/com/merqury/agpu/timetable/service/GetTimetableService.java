@@ -1,14 +1,14 @@
 package com.merqury.agpu.timetable.service;
 
-import com.merqury.agpu.timetable.DTO.Day;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Discipline;
-import com.merqury.agpu.timetable.DTO.GroupDay;
-import com.merqury.agpu.timetable.DTO.TeacherDay;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import com.merqury.agpu.timetable.enums.DisciplineType;
 import com.merqury.agpu.timetable.memory.GroupIdMemory;
-import com.merqury.agpu.timetable.memory.TeacherTimetableMemory;
+import com.merqury.agpu.timetable.memory.IdMemory;
 import com.merqury.agpu.timetable.memory.TimetableMemory;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,151 +19,113 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 @Service
 @Log4j2
 public class GetTimetableService {
-    private final GroupIdMemory groupIdMemory;
-    private final TimetableMemory studentTimetableMemory;
-    private final TeacherTimetableMemory teacherTimetableMemory;
-    private final GetTeacherIdService getTeacherIdService;
+    private final TimetableMemory timetableMemory;
+    private final GetSearchIdService getSearchIdService;
+    private final Map<TimetableOwner, IdMemory> idMemoryMap;
 
-    public GetTimetableService(GroupIdMemory groupIdMemory, TimetableMemory memory, TeacherTimetableMemory teacherMemory, GetTeacherIdService getTeacherIdService) {
-        this.groupIdMemory = groupIdMemory;
-        this.studentTimetableMemory = memory;
-        this.teacherTimetableMemory = teacherMemory;
-        this.getTeacherIdService = getTeacherIdService;
+    public GetTimetableService(
+            GroupIdMemory groupIdMemory, TimetableMemory memory, GetSearchIdService getSearchIdService
+    ) {
+        this.timetableMemory = memory;
+        this.getSearchIdService = getSearchIdService;
+        idMemoryMap = Map.of(
+                TimetableOwner.GROUP, groupIdMemory
+        );
     }
 
-    private static final int ownerId = 118;
-    private static final String url = "http://www.it-institut.ru/Raspisanie/SearchedRaspisanie?OwnerId=%d&SearchId=%d&SearchString=None&Type=%s&WeekId=%d";
+    public List<TimetableDay> getDisciplines(
+            String id, TimetableOwner owner, String startDate, String endDate
+    ) throws IOException {
+        List<TimetableDay> result = new ArrayList<>();
+        for(String date: getDatesBetween(startDate, endDate))
+            result.add(getTimetableDayFromMemoryOrSiteAndCacheIfNeedIt(id, date, owner));
+        return result;
+    }
 
-    public List<GroupDay> getDisciplines(String groupName, String startDate, String endDate) throws IOException {
-        List<GroupDay> result = new ArrayList<>();
-        for(String date: getDatesBetween(startDate, endDate)) {
-            GroupDay day = (GroupDay) getDisciplines(groupName, date, false, true);
-            day.setGroupName(groupName);
-            result.add(day);
+    public TimetableDay getTimetableDayFromMemoryOrSiteAndCacheIfNeedIt(
+            String id, String date, TimetableOwner owner
+    ) throws IOException {
+        TimetableDay res = getTimetableDayFromMemory(id, date, owner);
+        if(res.getId().equals("None")) {
+            TimetableDay[] week = getTimetableWeek(id, date, owner);
+            for (TimetableDay timetableDay : week) {
+                timetableMemory.addDiscipline(timetableDay);
+            }
+            res = getFromArrayByDate(week, date);
+            timetableMemory.addDiscipline(res);
         }
-        return proxyList(result);
+        return res;
     }
 
-    public List<TeacherDay> getDisciplinesTeacher(String teacherName, String startDate, String endDate) throws IOException {
-        List<TeacherDay> result = new ArrayList<>();
-        for(String date: getDatesBetween(startDate, endDate)) {
-            result.add((TeacherDay) getDisciplines(teacherName, date, true, true));
-        }
-        return proxyListTeacher(result);
+    public TimetableDay getTimetableDayFromSite(
+            String id, String date, TimetableOwner owner
+    ) throws IOException {
+        TimetableDay[] week = getTimetableWeek(id, date, owner);
+        return getFromArrayByDate(week, date);
     }
 
-    public Day getDisciplines(String id, String date, boolean forTeacher, boolean useCache) throws IOException {
+    public TimetableDay getTimetableDayFromMemory(
+            String id, String date, TimetableOwner owner
+    ) {
+        TimetableDay dayFromMemory = timetableMemory.getTimetableByDate(id, date, owner);
+        if(!dayFromMemory.getDisciplines().isEmpty())
+            return dayFromMemory;
+        return TimetableDay.builder().id("None").date(date).disciplines(List.of()).owner(owner).build();
+    }
 
+    public TimetableDay[] getTimetableWeek(String id, String date, TimetableOwner owner) throws IOException {
+        String html = getHtmlFromPage(id, getSearchIdFromCacheOrSite(id, owner), owner, weekIdByDate(date));
+        TimetableDay[] week = parseHtml(html);
 
+        Arrays.stream(week).forEach(day ->
+            day.getDisciplines().removeIf(discipline -> discipline.getName() == null)
+        );
+
+        return week;
+    }
+
+    private int getSearchIdFromCacheOrSite(String id, @NotNull TimetableOwner owner){
+        if(idMemoryMap.containsKey(owner))
+            return idMemoryMap.get(owner).getSearchId(id);
+        return getSearchIdService.getSearchId(id, owner);
+    }
+
+    private TimetableDay getFromArrayByDate(TimetableDay[] arr, String date){
+        return Arrays.stream(arr)
+                .filter(el -> el.getDate().equals(date))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private long weekIdByDate(String date){
         int mappingWeekId = 3655;
 
-        long weekId = mappingWeekId + countDays(date) / 7;
-
-        return parseHtml(String.format(
-                        url,
-                        ownerId,
-                        forTeacher?getTeacherIdService.getId(id): groupIdMemory.getSearchId(id),
-                        forTeacher?"Teacher":"Group",
-                        weekId),
-                date,
-                id,
-                forTeacher,
-                useCache
-        ).proxy();
+        return mappingWeekId + countDays(date) / 7;
     }
 
-    private void dataFilter(List<Discipline> result, List<Discipline> allDisciplines, String cur) {
-        for (Discipline discipline : allDisciplines) {
-            if (discipline.getDate().equals(cur)) {
-                if (discipline.getName() != null)
-                    result.add(discipline);
-                else
-                    result.add(null);
-            }
-        }
-        for (; ; ) {
-            if (result.isEmpty())
-                break;
-            if (result.get(result.size() - 1) == null)
-                result.remove(result.size() - 1);
-            else
-                break;
-        }
-    }
-
-
-    public static List<String> getDatesBetween(String startDate, String endDate) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        LocalDate start = LocalDate.parse(startDate, formatter);
-        LocalDate end = LocalDate.parse(endDate, formatter);
-
-        List<String> dates = new ArrayList<>();
-        LocalDate dateCursor = start;
-
-        while (!dateCursor.isAfter(end)) {
-            dates.add(dateCursor.format(formatter));
-            dateCursor = dateCursor.plusDays(1);
-        }
-
-        return dates;
-    }
-
-    private long countDays(String endDate) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        LocalDate dt = LocalDate.parse("28.08.2023", formatter);
-        long mappingWeek = dt.toEpochDay();
-
-        dt = LocalDate.parse(endDate, formatter);
-        long currentWeek = dt.toEpochDay();
-
-        return (currentWeek - mappingWeek);
-    }
-
-
-    private Day parseHtml(String url, String date, String id, boolean forTeacher, boolean useCache) throws IOException {
-        String fio;
-
-        if(forTeacher){
-            fio = getTeacherIdService.getFIO(id).split(",")[0];
-
-            if(fio.equals("None"))
-                return TeacherDay.builder()
-                        .teacherName("None")
-                        .date(date)
-                        .disciplines(List.of(Discipline.holiday()))
-                        .build();
-            id = fio;
-        }
-
-        List<Discipline> result;
-
-        if(useCache){
-            Day day = forTeacher?teacherTimetableMemory.getDisciplineByDate(id, date):studentTimetableMemory.getDisciplineByDate(id, date);
-            result = day.getDisciplines();
-            if(!result.isEmpty()) {
-                log.info("info: memory call");
-                if(day instanceof GroupDay groupDay){
-                    groupDay.setGroupName(id);
-                    return groupDay;
-                }
-                return day;
-            }
-        }
-
-        result = new ArrayList<>();
-
-//        log.info("info: it-institut call on url: {}", url);
-        URL url1 = new URL(url);
+    private String getHtmlFromPage(
+            String searchText, int searchId, TimetableOwner owner, long weekId
+    ) throws IOException {
+        String ownerString = capitalize(owner.name().toLowerCase());
+        URL url1 = new URL(
+                """
+                        http://www.it-institut.ru/Raspisanie/SearchedRaspisanie\
+                        ?OwnerId=118&SearchId=%d&SearchString=%s&Type=%s&WeekId=%d""".formatted(
+                        searchId,
+                        URLEncoder.encode(searchText, StandardCharsets.UTF_8),
+                        ownerString,
+                        weekId
+                )
+        );
 
         HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
 
@@ -182,66 +144,98 @@ public class GetTimetableService {
             html.append(cur);
         }
 
-        Document doc = Jsoup.parse(html.toString());
+        return html.toString();
+    }
 
-        Elements elements = Objects.requireNonNull(Objects.requireNonNull(doc
-                                .getElementsByClass("table")
-                                .first())
-                        .getElementsByTag("tbody")
-                        .first())
+    private String capitalize(String str){
+        return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+    }
+
+    private TimetableDay[] parseHtml(String html){
+        TimetableDay[] week = new TimetableDay[7];
+        Document doc = Jsoup.parse(html);
+
+        Elements elements = doc
+                .getElementsByClass("table")
+                .first()
+                .getElementsByTag("tbody")
+                .first()
                 .getElementsByTag("tr");
 
-        Elements times = Objects.requireNonNull(Objects.requireNonNull(doc
-                                .getElementsByClass("thead-light")
-                                .first())
-                        .getElementsByTag("tr")
-                        .first())
+        Elements times = doc
+                .getElementsByClass("thead-light")
+                .first()
+                .getElementsByTag("tr")
+                .first()
                 .getElementsByTag("th");
+
+        List<Element> dayCells = doc
+                .getElementsByClass("table")
+                .first()
+                .getElementsByTag("tbody")
+                .first()
+                .getElementsByTag("tr")
+                .stream().map(element -> element
+                        .getElementsByTag("th")
+                        .first())
+                .toList();
+
+
+        List<String> dates = dayCells.stream().map( element ->
+                element.html().split("<br>")[1].trim()
+        ).toList();
+
+        String id = doc
+                .getElementsByClass("input-group")
+                .first()
+                .getElementsByTag("input")
+                .first()
+                .attr("value");
+
+        for (int i = 0; i < week.length; i++) {
+            week[i] = TimetableDay.builder()
+                    .date(dates.get(i))
+                    .disciplines(new ArrayList<>())
+                    .id(id)
+                    .build();
+        }
 
         Integer[] col = parseCol(times);
 
-        List<Discipline> allDisciplines = new ArrayList<>();
+        for (int i = 0; i < 7; i++)
+            parseDay(elements.get(i), week[i], col);
 
-        for (int i = 0; i < 7; i++) {
-            parseDay(elements.get(i), allDisciplines);
-        }
-
-        for(String tmpDate: getDatesBetween(allDisciplines.get(0).getDate(), allDisciplines.get(allDisciplines.size()-1).getDate())){
-            List<Discipline> tmpArray = new ArrayList<>();
-            if(tmpDate.equals(date))
-                continue;
-            dataFilter(tmpArray, allDisciplines, tmpDate);
-            assignMissingData(id, tmpArray, col, tmpDate, forTeacher);
-        }
-
-        dataFilter(result, allDisciplines, date);
-
-        assignMissingData(id, result, col, date, forTeacher);
-
-        String name;
-        if(!result.isEmpty())
-            name = forTeacher?result.get(0).getTeacherName():result.get(0).getGroupName();
-        else name = id;
-
-        if(result.isEmpty()) {
-            result.add(Discipline.holiday());
-        }
-
-        if(!forTeacher)
-            return GroupDay.builder()
-                    .date(date)
-                    .groupName(id)
-                    .disciplines(result)
-                    .build();
-        else
-            return TeacherDay.builder()
-                    .teacherName(name)
-                    .date(date)
-                    .disciplines(result)
-                    .build();
+        return week;
     }
 
-    private void assignMissingData(String id, List<Discipline> result, Integer[] col, String date, boolean forTeacher) {
+    public static List<String> getDatesBetween(String startDate, String endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        LocalDate start = LocalDate.parse(startDate, formatter);
+        LocalDate end = LocalDate.parse(endDate, formatter);
+
+        List<String> dates = new ArrayList<>();
+        LocalDate dateCursor = start;
+
+        while (!dateCursor.isAfter(end)) {
+            dates.add(dateCursor.format(formatter));
+            dateCursor = dateCursor.plusDays(1);
+        }
+
+        return dates;
+    }
+
+    private long countDays(String endDate) {
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    LocalDate dt = LocalDate.parse("28.08.2023", formatter);
+    long mappingWeek = dt.toEpochDay();
+
+    dt = LocalDate.parse(endDate, formatter);
+    long currentWeek = dt.toEpochDay();
+
+    return (currentWeek - mappingWeek);
+}
+
+    private void assignTimeOfDisciplines(List<Discipline> result, Integer[] col) {
         Integer[] pairs = new Integer[result.size()];
         for (int i = 0; i < pairs.length; i++) {
             if(result.get(i) == null) {
@@ -258,97 +252,6 @@ public class GetTimetableService {
                 continue;
             result.get(i).setTime(timeByIndex(res[i]));
         }
-
-        result.removeIf(Objects::isNull);
-
-        result.forEach(el -> {
-            String d_name = el.getName();
-            if(d_name.toLowerCase().contains("лек.")) {
-                el.setType(DisciplineType.lec);
-                el.setName(d_name.replace(",лек.", ""));
-            }
-            else if(d_name.toLowerCase().contains("прак.")) {
-                el.setType(DisciplineType.prac);
-                el.setName(d_name.replace(",прак.", ""));
-            }
-            else if(d_name.toLowerCase().contains("экз.")) {
-                el.setType(DisciplineType.exam);
-                el.setName(d_name.replace(",экз.", ""));
-            }
-            else if(d_name.toLowerCase().contains("лаб.")) {
-                el.setType(DisciplineType.lab);
-                el.setName(d_name.replace(",лаб.", ""));
-            }
-            else if(d_name.toLowerCase().contains("каникулы")) {
-                el.setType(DisciplineType.hol);
-                el.setName(d_name.replace(",каникулы.", ""));
-            }
-            else if(d_name.toLowerCase().contains("выходной")) {
-                el.setType(DisciplineType.hol);
-                el.setName(d_name.replace(",выходной.", ""));
-            }
-            else if(d_name.toLowerCase().contains("зач.")) {
-                el.setType(DisciplineType.cred);
-                el.setName(d_name.replace(",зач.", ""));
-            }
-            else if(d_name.toLowerCase().contains("конс.")) {
-                el.setType(DisciplineType.cons);
-                el.setName(d_name.replace(",конс.", ""));
-            }
-            else if(d_name.toLowerCase().contains("фэпо")) {
-                el.setType(DisciplineType.fepo);
-                el.setName(d_name.replace(",фэпо.", ""));
-            }
-            else
-                el.setType(DisciplineType.none);
-        });
-
-
-        if(!result.isEmpty()){
-            Day check = forTeacher?teacherTimetableMemory.getDisciplineByDate(id, result.get(0).getDate()):studentTimetableMemory.getDisciplineByDate(id, result.get(0).getDate());
-            if(!check.isEmpty()) {
-                return;
-            }
-        }
-
-        String groupNama;
-        if(!result.isEmpty())
-            groupNama = result.get(0).getGroupName();
-        else
-            groupNama = id;
-
-        if(result.isEmpty()) {
-            result.add(Discipline.holiday());
-        }
-
-
-        if(forTeacher)
-            teacherTimetableMemory.addDiscipline(TeacherDay.builder()
-                    .teacherName(id)
-                    .date(date)
-                    .disciplines(result)
-                    .build()
-            );
-        else
-            studentTimetableMemory.addDiscipline(GroupDay.builder()
-                    .groupName(groupNama)
-                    .date(date)
-                    .disciplines(result)
-                    .build()
-            );
-    }
-
-    private List<GroupDay> proxyList(List<GroupDay> source){
-        List<GroupDay> res = new ArrayList<>();
-        for(GroupDay groupDay : source)
-            res.add(groupDay.proxy());
-        return res;
-    }
-    private List<TeacherDay> proxyListTeacher(List<TeacherDay> source){
-        List<TeacherDay> res = new ArrayList<>();
-        for(TeacherDay day: source)
-            res.add(day.proxy());
-        return res;
     }
 
     private Integer[] parseCol(Elements elements){
@@ -359,25 +262,30 @@ public class GetTimetableService {
         return res.toArray(new Integer[0]);
     }
 
-    private void parseDay(Element el, List<Discipline> disc) { // сюда приходит тег tr
+    private void parseDay(Element el, TimetableDay day, Integer[] col) { // сюда приходит тег tr
         Element nameOfClass = el.getElementsByTag("th").first();
         Elements disciplines = el.getElementsByTag("td");
         for (int i = 0; i < 8; i++) {
             assert nameOfClass != null;
-            parseDiscipline(disciplines.get(i), disc, nameOfClass.html().split("\n")[1]);
+            parseDiscipline(disciplines.get(i), day, nameOfClass.html().split("\n")[1]);
         }
+        assignTimeOfDisciplines(day.getDisciplines(), col);
     }
 
-    private void parseDiscipline(Element el, List<Discipline> disc, String date) { // сюда приходит тег td
+    private void parseDiscipline(Element el, TimetableDay day, String date) { // сюда приходит тег td
         Discipline result = new Discipline();
         Elements spans = el.getElementsByTag("span");
         if(spans.isEmpty()) {
             result.setDate(date);
             result.setColspan(1);
-            disc.add(result);
+            day.getDisciplines().add(result);
             return;
         }
-        result.setName(spans.get(0).text());
+        String name = spans.get(0).text();
+        List<Character> characters = List.of(',', '.');
+        if(characters.contains(name.charAt(name.length()-1)))
+            name = name.substring(0, name.length()-1);
+        result.setName(name);
         String[] prepodAndAudience = spans.get(1).text().split(",");
         if (prepodAndAudience.length >= 3) {
             result.setTeacherName(prepodAndAudience[0].trim());
@@ -393,7 +301,31 @@ public class GetTimetableService {
         result.setDate(date);
         result.setGroupName(spans.get(2).text().replace("(", "").replace(")",""));
         result.setColspan(Integer.parseInt(el.attr("colspan")));
-        disc.add(result);
+        assignTypeAndRenameDiscipline(result);
+        day.getDisciplines().add(result);
+    }
+
+    private void assignTypeAndRenameDiscipline(Discipline discipline){
+        Map<String, DisciplineType> mapBetweenNameAndType = Map.of(
+                "конс", DisciplineType.cons,
+                "лек", DisciplineType.lec,
+                "фэпо", DisciplineType.fepo,
+                "зач", DisciplineType.cred,
+                "выходной", DisciplineType.hol,
+                "каникулы", DisciplineType.hol,
+                "лаб", DisciplineType.lab,
+                "экз", DisciplineType.exam,
+                "прак", DisciplineType.prac
+        );
+
+        for(var entry: mapBetweenNameAndType.entrySet()){
+            if(discipline.getName().toLowerCase().contains(entry.getKey())){
+                discipline.setName(discipline.getName().replace(","+entry.getKey(), ""));
+                discipline.setType(entry.getValue());
+                return;
+            }
+        }
+        discipline.setType(DisciplineType.none);
     }
 
     private String timeByIndex(int index){

@@ -1,7 +1,9 @@
 package com.merqury.agpu.timetable.memory;
 
 import com.merqury.agpu.timetable.DTO.Groups;
-import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.ServerStates;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
+import com.merqury.agpu.timetable.service.GetSearchIdService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
@@ -12,32 +14,33 @@ import static com.merqury.agpu.AgpuTimetableApplication.*;
 
 @Component
 @Log4j2
-public class GroupIdMemory {
-    private final GetGroupIdService groupSearchIdService;
+public class GroupIdMemory implements IdMemory{
+    private final GetSearchIdService groupSearchIdService;
 
     private final HashMap<String, Integer> groupSearchIdMap;
 
     public static boolean isUpdatedAllGroups;
 
+    @Override
     public int getSearchId(String groupName){
         if(isUpdatedAllGroups)
             return groupSearchIdMap.get(groupName);
         return 0;
     }
 
-    public GroupIdMemory(GetGroupIdService groupSearchIdService) {
+    public GroupIdMemory(GetSearchIdService groupSearchIdService) {
         this.groupSearchIdService = groupSearchIdService;
         this.groupSearchIdMap = new HashMap<>();
-        fetchData();
         startDaemonForUpdatingGroups();
-
     }
 
     private void startDaemonForUpdatingGroups(){
         async(() -> {
             while (true){
-                waitWeek();
+                ServerStates.isGroupUpdated = false;
                 fetchData();
+                ServerStates.isGroupUpdated = true;
+                waitWeek();
             }
         });
     }
@@ -53,7 +56,7 @@ public class GroupIdMemory {
     }
 
     private void fetchDataFromService(){
-        for(Groups faculty: groupSearchIdService.getAllGroups())
+        for(Groups faculty: groupSearchIdService.getAllGroupsFromMainPage())
             fetchGroupsFromFaculty(faculty);
     }
 
@@ -63,7 +66,7 @@ public class GroupIdMemory {
     }
 
     private void putInMemory(String groupName){
-        int searchId = groupSearchIdService.getId(groupName);
+        int searchId = groupSearchIdService.getSearchId(groupName, TimetableOwner.GROUP);
         groupSearchIdMap.put(groupName, searchId);
     }
 

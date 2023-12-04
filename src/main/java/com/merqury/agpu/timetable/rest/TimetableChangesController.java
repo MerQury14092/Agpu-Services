@@ -1,43 +1,47 @@
 package com.merqury.agpu.timetable.rest;
 
 import com.merqury.agpu.general.Controllers;
-import com.merqury.agpu.timetable.DTO.GroupDay;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
 import com.merqury.agpu.timetable.DTO.Groups;
+import com.merqury.agpu.timetable.memory.TimetableMemory;
 import com.merqury.agpu.timetable.notificatoin.DTO.Notification;
 import com.merqury.agpu.timetable.notificatoin.DTO.Webhook;
 import com.merqury.agpu.timetable.notificatoin.Webhooks;
 import com.merqury.agpu.timetable.notificatoin.interfaces.TemporarySubscriber;
 import com.merqury.agpu.timetable.notificatoin.service.WebhookRegistryService;
-import com.merqury.agpu.timetable.service.GetGroupIdService;
+import com.merqury.agpu.timetable.service.GetSearchIdService;
 import com.merqury.agpu.timetable.notificatoin.service.TimetableChangesPublisher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.server.PathParam;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.http.MediaType;
-import org.springframework.util.MimeType;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.*;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/timetable/changes")
 public class TimetableChangesController {
-    private final GetGroupIdService getGroupIdService;
+    private final GetSearchIdService getSearchIdService;
     private final TimetableChangesPublisher changesPublisher;
+    private final TimetableMemory memory;
     private final WebhookRegistryService webhookRegistryService;
+    private final MessageDigest digest;
 
-    public TimetableChangesController(GetGroupIdService getGroupIdService) {
-        this.getGroupIdService = getGroupIdService;
+    public TimetableChangesController(GetSearchIdService getSearchIdService, TimetableMemory memory, MessageDigest digest) {
+        this.getSearchIdService = getSearchIdService;
+        this.memory = memory;
+        this.digest = digest;
         webhookRegistryService = WebhookRegistryService.singleton();
         this.changesPublisher = TimetableChangesPublisher.singleton();
     }
 
 
     @GetMapping("/day")
-    public GroupDay getChanges(
+    public TimetableDay getChanges(
             @PathParam("") String groupId,
             HttpServletResponse response,
             @PathParam("") Optional<Integer> timeout
@@ -53,7 +57,7 @@ public class TimetableChangesController {
         }
         boolean contains = false;
         Super:
-        for(Groups faculty: getGroupIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroupsFromMainPage())
             for (String group: faculty.getGroups())
                 if(group.equals(groupId)){
                     contains = true;
@@ -66,7 +70,7 @@ public class TimetableChangesController {
 
         TemporarySubscriber subscriber = new TemporarySubscriber(timeout.get(), groupId);
         changesPublisher.addSubscriber(subscriber);
-        GroupDay res = subscriber.get();
+        TimetableDay res = subscriber.get();
         if(res == null){
             changesPublisher.removeSubscriber(subscriber);
             return null;
@@ -76,17 +80,20 @@ public class TimetableChangesController {
     }
 
     @PostMapping("/push")
-    public String pushNotification(HttpServletRequest request, HttpServletResponse response, @RequestBody GroupDay day) throws IOException {
+    public String pushNotification(HttpServletRequest request, HttpServletResponse response, @RequestBody TimetableDay timetableDay) throws IOException {
         String authToken = request.getHeader("Authorization");
         if(authToken == null) {
             Controllers.sendError(403, "Forbidden", response);
             return null;
         }
-        if(!authToken.equals("Petrakov14092")) {
+        String encryptedAuthToken = new String(digest.digest(authToken.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+        if(!encryptedAuthToken.equals("=�\u001E>Gg\u001EUmù�*�rX�㯘FްВ�i����")) {
             Controllers.sendError(403, "Forbidden", response);
             return null;
         }
-        changesPublisher.publishNotification(day.getGroupName(), day);
+        timetableDay.isSynthetic = true;
+        memory.addDiscipline(timetableDay);
+        changesPublisher.publishNotification(timetableDay.getId(), timetableDay);
         return "OK";
     }
 
@@ -97,17 +104,17 @@ public class TimetableChangesController {
             @PathParam("") Optional<Integer> timeout
     ) throws IOException
     {
-        GroupDay day = getChanges(groupId, response, timeout);
-        if(day == null)
+        TimetableDay timetableDay = getChanges(groupId, response, timeout);
+        if(timetableDay == null)
             return Notification.noChanges("N/A");
-        return Notification.thereAreChanges(day.getDate());
+        return Notification.thereAreChanges(timetableDay.getDate());
     }
 
     @PostMapping(value = "webhook/register", produces = MediaType.APPLICATION_JSON_VALUE)
     public String registerWebhook(@RequestBody Webhook webhook, HttpServletResponse response) throws IOException {
         boolean contains = false;
         Super:
-        for(Groups faculty: getGroupIdService.getAllGroups())
+        for(Groups faculty: getSearchIdService.getAllGroupsFromMainPage())
             for (String group: faculty.getGroups())
                 if(group.equals(webhook.getGroup())){
                     contains = true;

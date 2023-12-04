@@ -4,10 +4,13 @@ import lombok.Data;
 
 @Data
 public class Notification {
+    private boolean thereAreChanges;
+    private String date;
 
     public static Notification noChanges(String date){
         return new Notification(false, date);
     }
+
     public static Notification thereAreChanges(String date){
         return new Notification(true, date);
     }
@@ -16,7 +19,4 @@ public class Notification {
         this.date = date;
         this.thereAreChanges = hadChanges;
     }
-
-    private boolean thereAreChanges;
-    private String date;
 }

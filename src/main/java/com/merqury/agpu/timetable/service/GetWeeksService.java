@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Scanner;
 
 @Component
@@ -33,7 +32,7 @@ public class GetWeeksService {
     }
 
     private List<Week> parseHtml(){
-        Scanner sc = new Scanner(Objects.requireNonNull(GetWeeksService.class.getResourceAsStream("/static/weeks")));
+        Scanner sc = new Scanner(GetWeeksService.class.getResourceAsStream("/static/weeks"));
 
         StringBuilder builder = new StringBuilder();
 

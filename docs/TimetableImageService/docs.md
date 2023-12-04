@@ -11,7 +11,7 @@
 * `horizontal` - Для получения горизонтального расписания (дисциплины дня слева направо)
 * `vertical` - Для получения вертикального расписания (дисциплины дня сверху вниз)
 
-URL: ***http://merqury.fun/api/timetable/image/day***
+URL: ***http://merqury.fun/api/timetable/image/timetableDay***
 
 <hr>
 

@@ -1,6 +1,8 @@
 package com.merqury.agpu.timetable.memory;
 
-import com.merqury.agpu.timetable.DTO.GroupDay;
+import com.merqury.agpu.timetable.DTO.Discipline;
+import com.merqury.agpu.timetable.DTO.TimetableDay;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
@@ -9,45 +11,72 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.merqury.agpu.AgpuTimetableApplication.*;
+
 @Component
-//@Log4j2
+@Log4j2
 public class TimetableMemory {
-    private final List<GroupDay> memory;
+    private final List<TimetableDay> memory;
+    private static final long memoryExpirationTime;
+
+    static {
+        memoryExpirationTime = TimeUnit.MINUTES.toMillis(35);
+    }
 
     public TimetableMemory(){
         memory = new ArrayList<>();
     }
 
-    public void addDiscipline(GroupDay groupDay){
-        //log.info("added day: {}", groupDay);
-        memory.add(groupDay);
-        Thread cleaner = new Thread(() -> {
-            //log.info("task fo remove added");
-            try {
-                Thread.sleep(TimeUnit.HOURS.toMillis(2));
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            //log.info("object now removing {}", groupDay);
-            memory.remove(groupDay);
-        });
-        cleaner.setDaemon(true);
-        cleaner.start();
+    public void addDiscipline(TimetableDay timetableDay){
+        addingStubIfTimetableDayIsEmpty(timetableDay);
+        if(!getTimetableByDate(timetableDay.getId(), timetableDay.getDate(), timetableDay.getOwner()).equals(timetableDay))
+            memory.removeIf(day -> day.getId().equals(timetableDay.getDate()) && day.getDate().equals(timetableDay.getDate()));
+        memory.add(timetableDay);
+        addTaskForCleanDayFromMemory(timetableDay);
     }
 
-    public GroupDay getDisciplineByDate(String groupName, String date){
-        //log.info("trying get discipline by date {} and by name {}\nDisciplines in memory:", date, groupName);
-        //memory.forEach(log::info);
+    private void addingStubIfTimetableDayIsEmpty(TimetableDay day){
+        if (day.isEmpty())
+            day.getDisciplines().add(Discipline.holiday());
+    }
 
-        var res =  memory.stream()
-                .filter(groupGroupDay -> (groupGroupDay.getGroupName().equals(groupName) && groupGroupDay.getDate().equals(date)))
-                .toList();
+    private void addTaskForCleanDayFromMemory(TimetableDay timetableDay){
+        log.debug("память добавлен день - {}", timetableDay);
+        if(timetableDay.isSynthetic)
+            return;
+        async(() -> {
+            trySleep();
+            memory.remove(timetableDay);
+        });
+    }
+
+    private void trySleep(){
+        try {
+            Thread.sleep(TimetableMemory.memoryExpirationTime);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public TimetableDay getTimetableByDate(String id, String date, TimetableOwner owner){
+        log.debug("запрос из памяти на {} - {}", id, date);
+        var res =  getFilteredByIdAndDateTimetableDays(id, date);
         if(!res.isEmpty())
             return res.get(0);
+        return getEmptyDateWith(id, date, owner);
+    }
 
-        return GroupDay.builder()
+    private List<TimetableDay> getFilteredByIdAndDateTimetableDays(String id, String date){
+        return memory.stream()
+                .filter(day -> (day.getId().equals(id) && day.getDate().equals(date)))
+                .toList();
+    }
+
+    private TimetableDay getEmptyDateWith(String id, String date, TimetableOwner owner){
+        return TimetableDay.builder()
                 .date(date)
-                .groupName(groupName)
+                .id(id)
+                .owner(owner)
                 .disciplines(Collections.emptyList())
                 .build();
     }

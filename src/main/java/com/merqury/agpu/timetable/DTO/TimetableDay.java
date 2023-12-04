@@ -1,35 +1,39 @@
 package com.merqury.agpu.timetable.DTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class GroupDay extends Day{
+public class TimetableDay {
     String date;
-    String groupName;
+    String id;
+    TimetableOwner owner;
     List<Discipline> disciplines;
+
+    @JsonIgnore
+    public boolean isSynthetic;
 
     @JsonIgnore
     public boolean isEmpty(){
         return disciplines.isEmpty();
     }
 
-    public GroupDay deleteHolidays(){
+    public TimetableDay deleteHolidays(){
         disciplines = disciplines.stream()
                 .filter(discipline -> !discipline.getName().equals("HOLIDAY"))
                 .collect(Collectors.toList());
         return this;
     }
 
-    public GroupDay proxy(){
+    public TimetableDay proxy(){
         List<Discipline> proxyList = new ArrayList<>();
 
         for (Discipline disc: disciplines) {
@@ -42,9 +46,10 @@ public class GroupDay extends Day{
             proxyList.add(proxyDisc);
         }
 
-        return GroupDay.builder()
+        return TimetableDay.builder()
                 .date(date)
-                .groupName(groupName)
+                .id(id)
+                .owner(owner)
                 .disciplines(proxyList)
                 .build();
     }
