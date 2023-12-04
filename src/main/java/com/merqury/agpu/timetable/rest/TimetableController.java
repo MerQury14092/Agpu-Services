@@ -114,11 +114,11 @@ public class TimetableController {
             return null;
         }
         String groupName = searchIdService.getFullGroupName(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"));
-        if (groupName.equals("None")) {
+        if (groupName.equals("None") && owner.equals(TimetableOwner.GROUP)) {
             Controllers.sendError(400, "Unknown group", response);
             return null;
         }
-        if (!groupName.trim().equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id"))) {
+        if (!groupName.trim().equals(request.getParameter("id") == null ? request.getParameter("groupId") : request.getParameter("id")) && owner.equals(TimetableOwner.GROUP)) {
             Controllers.sendError(400, "Unknown group", response);
             return null;
         }

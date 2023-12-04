@@ -84,7 +84,7 @@ public class GetTimetableService {
 
     public TimetableDay[] getTimetableWeek(String id, String date, TimetableOwner owner) throws IOException {
         String html = getHtmlFromPage(id, getSearchIdFromCacheOrSite(id, owner), owner, weekIdByDate(date));
-        TimetableDay[] week = parseHtml(html);
+        TimetableDay[] week = parseHtml(html, owner);
 
         Arrays.stream(week).forEach(day ->
             day.getDisciplines().removeIf(discipline -> discipline.getName() == null)
@@ -151,7 +151,7 @@ public class GetTimetableService {
         return Character.toUpperCase(str.charAt(0)) + str.substring(1);
     }
 
-    private TimetableDay[] parseHtml(String html){
+    private TimetableDay[] parseHtml(String html, TimetableOwner for_who){
         TimetableDay[] week = new TimetableDay[7];
         Document doc = Jsoup.parse(html);
 
@@ -204,6 +204,10 @@ public class GetTimetableService {
 
         for (int i = 0; i < 7; i++)
             parseDay(elements.get(i), week[i], col);
+
+        for (TimetableDay timetableDay : week) {
+            timetableDay.setOwner(for_who);
+        }
 
         return week;
     }

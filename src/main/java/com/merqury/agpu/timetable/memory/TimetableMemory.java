@@ -41,7 +41,7 @@ public class TimetableMemory {
     }
 
     private void addTaskForCleanDayFromMemory(TimetableDay timetableDay){
-        log.debug("память добавлен день - {}", timetableDay);
+        log.debug("в память добавлен день - {}", timetableDay);
         if(timetableDay.isSynthetic)
             return;
         async(() -> {
