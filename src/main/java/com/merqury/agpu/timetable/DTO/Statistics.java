@@ -2,6 +2,7 @@ package com.merqury.agpu.timetable.DTO;
 
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -9,12 +10,14 @@ import java.util.Map;
 
 @Data
 public class Statistics {
-    private String startTime, endTime;
-    private Map<String, Integer> map;
+    private String startTime, endTime, date;
+    private int total;
+    private Map<String, Integer> statistics;
     public Statistics(){
         this.startTime = getCurrentTime();
         this.endTime = "now";
-        map = new HashMap<>();
+        date = getCurrentDate();
+        statistics = new HashMap<>();
     }
 
     public void endRecording(){
@@ -27,10 +30,17 @@ public class Statistics {
         return time.format(formatter);
     }
 
+    private static String getCurrentDate(){
+        LocalDate date = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm");
+        return date.format(formatter);
+    }
+
     public void addRecord(String group){
-        if(!map.containsKey(group))
-            map.put(group, 1);
+        if(!statistics.containsKey(group))
+            statistics.put(group, 1);
         else
-            map.put(group, map.get(group)+1);
+            statistics.put(group, statistics.get(group)+1);
+        total++;
     }
 }
