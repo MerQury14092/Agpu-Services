@@ -430,6 +430,8 @@ public class ImageService {
                             case lab -> Color.decode("#d3e2d0");
                             case exam -> Color.decode("#f6574c");
                             case fepo -> Color.decode("#ea48d0");
+                            case cred -> Color.decode("#C7AB93");
+                            case cours -> Color.decode("#CA90D7");
                             default -> Color.WHITE;
                         }
         );
@@ -462,6 +464,7 @@ public class ImageService {
                             case hol -> "Праздник";
                             case lec -> "Лекция";
                             case exam -> "Экзамен";
+                            case cours -> "Курсовая";
                             case none -> "";
                         }
                 , 0, y+= (int) (fontHeight*1.5), res.getWidth(), fontHeight, font);

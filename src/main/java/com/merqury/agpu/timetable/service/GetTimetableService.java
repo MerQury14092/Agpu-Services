@@ -320,7 +320,8 @@ public class GetTimetableService {
                 "каникулы", DisciplineType.hol,
                 "лаб", DisciplineType.lab,
                 "экз", DisciplineType.exam,
-                "прак", DisciplineType.prac
+                "прак", DisciplineType.prac,
+                "курсов", DisciplineType.cours
         );
 
         for(var entry: mapBetweenNameAndType.entrySet()){
