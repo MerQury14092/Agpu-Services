@@ -1,9 +1,9 @@
 package com.merqury.agpu.timetable.DTO;
 
+import com.merqury.agpu.timetable.enums.TimetableOwner;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -13,12 +13,15 @@ import java.util.Map;
 public class Statistics {
     private String startTime, endTime, date;
     private int total;
-    private Map<String, Integer> statistics;
+    private Map<TimetableOwner, Map<String, Integer>> statistics;
     public Statistics(){
         this.startTime = getCurrentTime();
         this.endTime = "now";
         date = getCurrentDate();
         statistics = new HashMap<>();
+        for(TimetableOwner owner: TimetableOwner.values()){
+            statistics.put(owner, new HashMap<>());
+        }
     }
 
     public void endRecording(){
@@ -37,11 +40,11 @@ public class Statistics {
         return date.format(formatter);
     }
 
-    public void addRecord(String group){
-        if(!statistics.containsKey(group))
-            statistics.put(group, 1);
+    public void addRecord(TimetableOwner owner, String group){
+        if(!statistics.get(owner).containsKey(group))
+            statistics.get(owner).put(group, 1);
         else
-            statistics.put(group, statistics.get(group)+1);
+            statistics.get(owner).put(group, statistics.get(owner).get(group)+1);
         total++;
     }
 }

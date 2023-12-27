@@ -68,7 +68,7 @@ public class TimetableController {
             res.setId(groupName);
         else if (res.getId().equals("None"))
             res.setId("Unknown group");
-        StatMemory.currentStatistics.addRecord(searchIdService.getSearchContent(request.getParameter("id"), switch (owner){
+        StatMemory.currentStatistics.addRecord(owner, searchIdService.getSearchContent(request.getParameter("id"), switch (owner){
             case GROUP -> "Group";
             case TEACHER -> "Teacher";
             case CLASSROOM -> "Classroom";
@@ -141,7 +141,7 @@ public class TimetableController {
             result.get(0).setId(groupName);
         else if (result.get(0).getId().equals("None"))
             return List.of();
-        StatMemory.currentStatistics.addRecord(searchIdService.getSearchContent(request.getParameter("id"), switch (owner){
+        StatMemory.currentStatistics.addRecord(owner, searchIdService.getSearchContent(request.getParameter("id"), switch (owner){
             case GROUP -> "Group";
             case TEACHER -> "Teacher";
             case CLASSROOM -> "Classroom";
