@@ -34,8 +34,9 @@ public class StatMemory {
         currentStatistics.endRecording();
         statistics.add(currentStatistics);
         currentStatistics = new Statistics();
-        if(statistics.size() > 1000)
+        if(statistics.size() > 24*7) {
             statistics.remove(0);
+        }
     }
 
     public List<Statistics> getStatistics(){
