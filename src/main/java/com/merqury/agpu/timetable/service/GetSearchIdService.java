@@ -51,7 +51,7 @@ public class GetSearchIdService {
         return getSearchContent(groupName, "Group");
     }
 
-    private String getSearchContent(String searchText, String expectedType){
+    public String getSearchContent(String searchText, String expectedType){
         SearchProduct[] result = tryToGetSearchProductArrayFromUrl(url, searchText);
         return Arrays.stream(result)
                 .filter(element -> Objects.equals(element.Type, expectedType))
