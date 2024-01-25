@@ -54,6 +54,9 @@ public class GetTimetableService {
     public TimetableDay getTimetableDayFromMemoryOrSiteAndCacheIfNeedIt(
             String id, String date, TimetableOwner owner
     ) throws IOException {
+        String ownerName = owner.name().toLowerCase();
+        ownerName = Character.toUpperCase(ownerName.charAt(0))+ownerName.substring(1);
+        id = getSearchIdService.getSearchContent(id, ownerName);
         TimetableDay res = getTimetableDayFromMemory(id, date, owner);
         if(res.getId().equals("None")) {
             TimetableDay[] week = getTimetableWeek(id, date, owner);
