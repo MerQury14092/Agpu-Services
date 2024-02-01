@@ -285,7 +285,7 @@ public class GetTimetableService {
         Elements spans = el.getElementsByTag("span");
         if(spans.isEmpty()) {
             result.setDate(date);
-            result.setColspan(1);
+            result.setColspan(Integer.parseInt(el.attr("colspan")));
             day.getDisciplines().add(result);
             return;
         }
